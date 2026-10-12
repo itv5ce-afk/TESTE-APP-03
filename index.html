@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a2540">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>BANCO ITV - Empréstimos e Finanças</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color:transparent; }
+:root {
+  --primary:#0a2540;
+  --secondary:#1e3a5f;
+  --accent:#d4af37;
+  --accent2:#f4c430;
+  --success:#10b981;
+  --danger:#ef4444;
+  --warning:#f59e0b;
+  --bg:#f3f4f6;
+  --card:#ffffff;
+  --text:#1f2937;
+  --muted:#6b7280;
+  --border:#e5e7eb;
+}
+body { background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
+
+/* ===== APP LAYOUT ===== */
+.app { display:flex; min-height:100vh; }
+
+/* Sidebar */
+.sidebar {
+  width:260px; background:var(--primary); color:#fff; padding:20px 0;
+  position:fixed; height:100vh; overflow-y:auto; transition:transform 0.3s; z-index:100;
+}
+.sidebar-header { padding:0 20px 20px; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; gap:12px; }
+.sidebar-logo { width:45px; height:45px; background:var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; color:var(--primary); font-size:20px; }
+.sidebar-title { font-size:18px; font-weight:700; letter-spacing:1px; }
+.sidebar-sub { font-size:11px; color:rgba(255,255,255,0.6); }
+.menu { list-style:none; padding:15px 0; }
+.menu li {
+  padding:13px 20px; cursor:pointer; display:flex; align-items:center; gap:12px;
+  font-size:14px; transition:all 0.2s; border-left:3px solid transparent;
+}
+.menu li:hover { background:rgba(255,255,255,0.05); }
+.menu li.active { background:rgba(212,175,55,0.15); border-left-color:var(--accent); color:var(--accent); }
+.menu-icon { font-size:18px; width:22px; text-align:center; }
+.sidebar-footer { padding:15px 20px; border-top:1px solid rgba(255,255,255,0.1); font-size:12px; color:rgba(255,255,255,0.5); margin-top:auto; }
+
+/* Main */
+.main { flex:1; margin-left:260px; transition:margin 0.3s; }
+.topbar {
+  background:#fff; padding:15px 25px; display:flex; align-items:center; justify-content:space-between;
+  box-shadow:0 1px 3px rgba(0,0,0,0.05); position:sticky; top:0; z-index:50;
+}
+.menu-toggle { display:none; background:none; border:none; font-size:24px; cursor:pointer; color:var(--primary); }
+.topbar-title { font-size:18px; font-weight:600; color:var(--primary); }
+.topbar-user { display:flex; align-items:center; gap:10px; }
+.user-avatar {
+  width:38px; height:38px; border-radius:50%; background:var(--accent); color:var(--primary);
+  display:flex; align-items:center; justify-content:center; font-weight:bold;
+}
+.user-info { font-size:13px; }
+.user-info strong { display:block; color:var(--primary); }
+.user-info span { color:var(--muted); font-size:11px; }
+
+.content { padding:25px; }
+.page { display:none; }
+.page.active { display:block; animation:fadeIn 0.3s; }
+@keyframes fadeIn { from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+
+/* Cards */
+.stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:18px; margin-bottom:25px; }
+.stat-card {
+  background:#fff; padding:22px; border-radius:14px; box-shadow:0 2px 8px rgba(0,0,0,0.04);
+  border-left:4px solid var(--accent); transition:transform 0.2s;
+}
+.stat-card:hover { transform:translateY(-3px); box-shadow:0 8px 20px rgba(0,0,0,0.08); }
+.stat-label { font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px; }
+.stat-value { font-size:26px; font-weight:700; color:var(--primary); }
+.stat-change { font-size:12px; margin-top:6px; }
+.stat-change.up { color:var(--success); }
+.stat-change.down { color:var(--danger); }
+
+.card {
+  background:#fff; border-radius:14px; padding:22px; box-shadow:0 2px 8px rgba(0,0,0,0.04);
+  margin-bottom:20px;
+}
+.card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:10px; }
+.card-title { font-size:17px; font-weight:600; color:var(--primary); }
+
+/* Tables */
+.table-wrap { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; }
+th, td { padding:12px; text-align:left; border-bottom:1px solid var(--border); font-size:14px; }
+th { background:#f9fafb; color:var(--muted); font-weight:600; font-size:12px; text-transform:uppercase; }
+tr:hover { background:#f9fafb; }
+.badge { padding:4px 10px; border-radius:20px; font-size:11px; font-weight:600; display:inline-block; }
+.badge-success { background:#d1fae5; color:#065f46; }
+.badge-warning { background:#fef3c7; color:#92400e; }
+.badge-danger { background:#fee2e2; color:#991b1b; }
+.badge-info { background:#dbeafe; color:#1e40af; }
+
+/* Forms */
+.form-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:15px; }
+.form-grid .full { grid-column:1/-1; }
+.input-group { margin-bottom:15px; }
+.input-group label { display:block; font-size:13px; color:var(--muted); margin-bottom:6px; font-weight:500; }
+.input-group input, .input-group select, .input-group textarea {
+  width:100%; padding:12px 14px; border:1.5px solid var(--border); border-radius:10px;
+  font-size:15px; transition:all 0.2s; background:#fff;
+}
+.input-group input:focus, .input-group select:focus, .input-group textarea:focus {
+  outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(212,175,55,0.15);
+}
+
+/* Buttons */
+.btn {
+  width:100%; padding:13px; border:none; border-radius:10px; font-size:15px; font-weight:600;
+  cursor:pointer; transition:all 0.2s; display:flex; align-items:center; justify-content:center; gap:8px;
+}
+.btn-primary { background:var(--primary); color:#fff; }
+.btn-primary:hover { background:var(--secondary); transform:translateY(-1px); }
+.btn-accent { background:var(--accent); color:var(--primary); }
+.btn-accent:hover { background:var(--accent2); }
+.btn-success { background:var(--success); color:#fff; }
+.btn-danger { background:var(--danger); color:#fff; }
+.btn-sm { padding:8px 14px; font-size:13px; width:auto; }
+
+/* Chat */
+.chat-container { display:grid; grid-template-columns:280px 1fr; gap:15px; height:calc(100vh - 170px); }
+.chat-list { background:#fff; border-radius:14px; overflow-y:auto; }
+.chat-item {
+  padding:14px; border-bottom:1px solid var(--border); cursor:pointer; display:flex; gap:10px;
+  transition:background 0.2s;
+}
+.chat-item:hover, .chat-item.active { background:#f3f4f6; }
+.chat-avatar { width:40px; height:40px; border-radius:50%; background:var(--accent); color:var(--primary); display:flex; align-items:center; justify-content:center; font-weight:bold; flex-shrink:0; }
+.chat-info { flex:1; min-width:0; }
+.chat-name { font-weight:600; font-size:14px; }
+.chat-last { font-size:12px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.chat-window { background:#fff; border-radius:14px; display:flex; flex-direction:column; }
+.chat-header { padding:15px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }
+.chat-messages { flex:1; padding:15px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; }
+.msg { max-width:70%; padding:10px 14px; border-radius:14px; font-size:14px; }
+.msg.me { background:var(--primary); color:#fff; align-self:flex-end; border-bottom-right-radius:4px; }
+.msg.them { background:#f3f4f6; color:var(--text); align-self:flex-start; border-bottom-left-radius:4px; }
+.msg-time { font-size:10px; opacity:0.7; margin-top:4px; }
+.chat-input { padding:12px; border-top:1px solid var(--border); display:flex; gap:8px; }
+.chat-input input { flex:1; padding:10px 14px; border:1px solid var(--border); border-radius:20px; font-size:14px; }
+.chat-input button { padding:0 18px; background:var(--primary); color:#fff; border:none; border-radius:20px; cursor:pointer; }
+
+/* Modal */
+.modal-overlay {
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200;
+  align-items:center; justify-content:center; padding:20px;
+}
+.modal-overlay.active { display:flex; }
+.modal {
+  background:#fff; border-radius:14px; padding:25px; width:100%; max-width:500px;
+  max-height:90vh; overflow-y:auto;
+}
+.modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
+.modal-title { font-size:18px; font-weight:600; color:var(--primary); }
+.modal-close { background:none; border:none; font-size:24px; cursor:pointer; color:var(--muted); }
+
+/* Toast */
+.toast {
+  position:fixed; bottom:20px; right:20px; background:var(--primary); color:#fff;
+  padding:14px 20px; border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,0.2);
+  z-index:300; transform:translateX(400px); transition:transform 0.3s;
+}
+.toast.show { transform:translateX(0); }
+.toast.success { background:var(--success); }
+.toast.error { background:var(--danger); }
+
+/* Chart */
+.chart-bar { display:flex; align-items:flex-end; gap:8px; height:200px; padding:10px 0; }
+.chart-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; }
+.chart-bar-fill { width:100%; background:linear-gradient(180deg, var(--accent), var(--accent2)); border-radius:6px 6px 0 0; min-height:4px; transition:height 0.5s; }
+.chart-label { font-size:11px; color:var(--muted); }
+
+/* Responsive */
+@media (max-width: 900px) {
+  .sidebar { transform:translateX(-100%); }
+  .sidebar.open { transform:translateX(0); box-shadow:5px 0 20px rgba(0,0,0,0.3); }
+  .main { margin-left:0; }
+  .menu-toggle { display:block; }
+  .chat-container { grid-template-columns:1fr; height:auto; }
+  .chat-list { max-height:250px; }
+  .content { padding:15px; }
+  .stat-value { font-size:22px; }
+  .topbar { padding:12px 15px; }
+  .user-info { display:none; }
+}
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns:1fr 1fr; gap:10px; }
+  .stat-card { padding:14px; }
+  .stat-value { font-size:18px; }
+  .card { padding:16px; }
+}
+
+/* Overlay mobile sidebar */
+.sidebar-overlay {
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:99;
+}
+.sidebar-overlay.active { display:block; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width:6px; height:6px; }
+::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:3px; }
+</style>
+</head>
+<body>
+
+<!-- ============ APP ============ -->
+<div class="app" id="app">
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+  
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">ITV</div>
+      <div>
+        <div class="sidebar-title">BANCO ITV</div>
+        <div class="sidebar-sub">Sistema Financeiro</div>
+      </div>
+    </div>
+    <ul class="menu">
+      <li class="active" onclick="showPage('dashboard', this)"><span class="menu-icon">📊</span> Dashboard</li>
+      <li onclick="showPage('clientes', this)"><span class="menu-icon">👥</span> Clientes</li>
+      <li onclick="showPage('emprestimos', this)"><span class="menu-icon">💰</span> Empréstimos</li>
+      <li onclick="showPage('simulacao', this)"><span class="menu-icon">🧮</span> Simulação</li>
+      <li onclick="showPage('financeiro', this)"><span class="menu-icon">💳</span> Financeiro</li>
+      <li onclick="showPage('transacoes', this)"><span class="menu-icon">🔄</span> Transações</li>
+      <li onclick="showPage('chat', this)"><span class="menu-icon">💬</span> Mensagens</li>
+      <li onclick="showPage('relatorios', this)"><span class="menu-icon">📈</span> Relatórios</li>
+      <li onclick="showPage('config', this)"><span class="menu-icon">⚙️</span> Configurações</li>
+    </ul>
+    <div class="sidebar-footer">
+      © 2026 Banco ITV<br>Versão 1.0.0
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+        <div class="topbar-title" id="pageTitle">Dashboard</div>
+      </div>
+      <div class="topbar-user">
+        <div class="user-info">
+          <strong id="userName">Administrador</strong>
+          <span>Gerente</span>
+        </div>
+        <div class="user-avatar" id="userAvatar">A</div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">💰 Total Emprestado</div>
+            <div class="stat-value" id="statEmprestado">R$ 0,00</div>
+            <div class="stat-change up">↑ 12% este mês</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">👥 Clientes Ativos</div>
+            <div class="stat-value" id="statClientes">0</div>
+            <div class="stat-change up">↑ 5 novos</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">📋 Empréstimos Ativos</div>
+            <div class="stat-value" id="statAtivos">0</div>
+            <div class="stat-change up">Em andamento</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">💵 Saldo em Caixa</div>
+            <div class="stat-value" id="statSaldo">R$ 0,00</div>
+            <div class="stat-change down">Disponível</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📊 Empréstimos por Mês</div>
+          </div>
+          <div class="chart-bar" id="chartBars"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🕐 Últimas Transações</div>
+            <button class="btn btn-sm btn-primary" onclick="showPage('transacoes', document.querySelectorAll('.menu li')[5])">Ver todas</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Data</th><th>Cliente</th><th>Tipo</th><th>Valor</th><th>Status</th></tr></thead>
+              <tbody id="recentTrans"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- CLIENTES -->
+      <div class="page" id="page-clientes">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">👥 Cadastro de Clientes</div>
+            <button class="btn btn-sm btn-accent" onclick="openModal('modalCliente')">➕ Novo Cliente</button>
+          </div>
+          <div class="input-group" style="margin-bottom:15px;">
+            <input type="text" id="searchCliente" placeholder="🔍 Buscar cliente..." oninput="renderClientes()">
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Nome</th><th>Telefone</th><th>Cidade</th><th>Status</th><th>Ações</th></tr></thead>
+              <tbody id="tableClientes"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- EMPRÉSTIMOS -->
+      <div class="page" id="page-emprestimos">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">💰 Empréstimos Concedidos</div>
+            <button class="btn btn-sm btn-accent" onclick="openModal('modalEmprestimo')">➕ Novo Empréstimo</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Cliente</th><th>Valor</th><th>Parcelas</th><th>Juros</th><th>Total</th><th>Status</th><th>Ações</th></tr></thead>
+              <tbody id="tableEmprestimos"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- SIMULAÇÃO -->
+      <div class="page" id="page-simulacao">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🧮 Simulador de Empréstimo</div>
+          </div>
+          <div class="form-grid">
+            <div class="input-group">
+              <label>Valor desejado (R$)</label>
+              <input type="number" id="simValor" placeholder="10000" value="10000">
+            </div>
+            <div class="input-group">
+              <label>Número de parcelas</label>
+              <select id="simParcelas">
+                <option value="6">6x</option>
+                <option value="12" selected>12x</option>
+                <option value="24">24x</option>
+                <option value="36">36x</option>
+                <option value="48">48x</option>
+                <option value="60">60x</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label>Taxa de juros (% a.m.)</label>
+              <input type="number" id="simJuros" step="0.1" value="1.99">
+            </div>
+            <div class="input-group">
+              <label>&nbsp;</label>
+              <button class="btn btn-primary" onclick="simular()">Calcular</button>
+            </div>
+          </div>
+          <div id="simResult" style="margin-top:20px;"></div>
+        </div>
+      </div>
+
+      <!-- FINANCEIRO -->
+      <div class="page" id="page-financeiro">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">💵 Entradas</div>
+            <div class="stat-value" id="finEntradas" style="color:var(--success);">R$ 0,00</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">💸 Saídas</div>
+            <div class="stat-value" id="finSaidas" style="color:var(--danger);">R$ 0,00</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">📊 Saldo Total</div>
+            <div class="stat-value" id="finSaldo">R$ 0,00</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">💳 Movimentações Financeiras</div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Data</th><th>Descrição</th><th>Tipo</th><th>Valor</th></tr></thead>
+              <tbody id="tableFinanceiro"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TRANSAÇÕES -->
+      <div class="page" id="page-transacoes">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🔄 Nova Transação</div>
+          </div>
+          <div class="form-grid">
+            <div class="input-group">
+              <label>Tipo</label>
+              <select id="trTipo">
+                <option value="deposito">💰 Depósito</option>
+                <option value="saque">💸 Saque</option>
+                <option value="transferencia">🔄 Transferência</option>
+                <option value="pagamento">✅ Pagamento Empréstimo</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label>Cliente (opcional)</label>
+              <select id="trCliente"><option value="">-- Selecione --</option></select>
+            </div>
+            <div class="input-group">
+              <label>Valor (R$)</label>
+              <input type="number" id="trValor" step="0.01" placeholder="0,00">
+            </div>
+            <div class="input-group">
+              <label>Descrição</label>
+              <input type="text" id="trDesc" placeholder="Ex: Pagamento parcela 3">
+            </div>
+            <div class="full">
+              <button class="btn btn-success" onclick="addTransacao()">✅ Registrar Transação</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHAT -->
+      <div class="page" id="page-chat">
+        <div class="card" style="padding:15px;">
+          <div class="chat-container">
+            <div class="chat-list" id="chatList"></div>
+            <div class="chat-window">
+              <div class="chat-header" id="chatHeader">
+                <div class="chat-avatar">?</div>
+                <div><strong>Selecione um cliente</strong></div>
+              </div>
+              <div class="chat-messages" id="chatMessages">
+                <div style="text-align:center; color:var(--muted); padding:40px;">Selecione uma conversa para começar</div>
+              </div>
+              <div class="chat-input">
+                <input type="text" id="chatInput" placeholder="Digite sua mensagem..." onkeypress="if(event.key==='Enter') sendMsg()">
+                <button onclick="sendMsg()">➤</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RELATÓRIOS -->
+      <div class="page" id="page-relatorios">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📈 Relatórios e Estatísticas</div>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-card"><div class="stat-label">Total de Empréstimos</div><div class="stat-value" id="repTotal">0</div></div>
+            <div class="stat-card"><div class="stat-label">Em Aberto</div><div class="stat-value" id="repAberto">0</div></div>
+            <div class="stat-card"><div class="stat-label">Quitados</div><div class="stat-value" id="repQuitado">0</div></div>
+            <div class="stat-card"><div class="stat-label">Inadimplentes</div><div class="stat-value" id="repInad">0</div></div>
+          </div>
+          <div style="margin-top:20px;">
+            <h3 style="margin-bottom:10px; color:var(--primary);">📊 Distribuição por Status</h3>
+            <div id="repChart" style="display:flex; gap:10px; flex-wrap:wrap;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONFIG -->
+      <div class="page" id="page-config">
+        <div class="card">
+          <div class="card-header"><div class="card-title">⚙️ Configurações do Sistema</div></div>
+          <div class="form-grid">
+            <div class="input-group"><label>Nome do Banco</label><input type="text" value="BANCO ITV"></div>
+            <div class="input-group"><label>CNPJ</label><input type="text" value="00.000.000/0001-00"></div>
+            <div class="input-group"><label>Taxa padrão de juros (% a.m.)</label><input type="number" step="0.01" value="1.99"></div>
+            <div class="input-group"><label>Máximo de parcelas</label><input type="number" value="60"></div>
+            <div class="full">
+              <button class="btn btn-primary" onclick="toast('Configurações salvas com sucesso!', 'success')">💾 Salvar Configurações</button>
+            </div>
+            <div class="full">
+              <button class="btn btn-danger" onclick="if(confirm('Apagar todos os dados?')){localStorage.clear(); location.reload();}">🗑️ Limpar todos os dados</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CLIENTE (SEM CPF E RG) -->
+<div class="modal-overlay" id="modalCliente">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Cadastro de Cliente</div>
+      <button class="modal-close" onclick="closeModal('modalCliente')">×</button>
+    </div>
+    <div class="form-grid">
+      <div class="input-group full"><label>Nome completo *</label><input type="text" id="cNome"></div>
+      <div class="input-group"><label>Telefone *</label><input type="text" id="cTel" placeholder="(00) 00000-0000"></div>
+      <div class="input-group"><label>E-mail</label><input type="email" id="cEmail"></div>
+      <div class="input-group"><label>Data de Nascimento</label><input type="date" id="cNasc"></div>
+      <div class="input-group"><label>Profissão</label><input type="text" id="cProf"></div>
+      <div class="input-group full"><label>Endereço</label><input type="text" id="cEnd"></div>
+      <div class="input-group"><label>Cidade</label><input type="text" id="cCid"></div>
+      <div class="input-group"><label>Estado</label>
+        <select id="cUf"><option>AC</option><option>AL</option><option>AM</option><option>AP</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MG</option><option>MS</option><option>MT</option><option>PA</option><option>PB</option><option>PE</option><option>PI</option><option>PR</option><option>RJ</option><option>RN</option><option>RO</option><option>RR</option><option>RS</option><option>SC</option><option>SE</option><option>SP</option><option>TO</option></select>
+      </div>
+      <div class="input-group"><label>Renda Mensal</label><input type="number" id="cRenda" step="0.01"></div>
+      <div class="input-group"><label>Status</label>
+        <select id="cStatus"><option value="ativo">Ativo</option><option value="inativo">Inativo</option><option value="bloqueado">Bloqueado</option></select>
+      </div>
+      <div class="full">
+        <button class="btn btn-success" onclick="saveCliente()">💾 Salvar Cliente</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EMPRÉSTIMO -->
+<div class="modal-overlay" id="modalEmprestimo">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Novo Empréstimo</div>
+      <button class="modal-close" onclick="closeModal('modalEmprestimo')">×</button>
+    </div>
+    <div class="form-grid">
+      <div class="input-group full"><label>Cliente *</label><select id="eCliente"></select></div>
+      <div class="input-group"><label>Valor (R$) *</label><input type="number" id="eValor" step="0.01"></div>
+      <div class="input-group"><label>Parcelas</label>
+        <select id="eParcelas"><option>6</option><option selected>12</option><option>24</option><option>36</option><option>48</option><option>60</option></select>
+      </div>
+      <div class="input-group"><label>Juros (% a.m.)</label><input type="number" id="eJuros" step="0.01" value="1.99"></div>
+      <div class="input-group"><label>Data Início</label><input type="date" id="eData"></div>
+      <div class="full"><button class="btn btn-success" onclick="saveEmprestimo()">💾 Conceder Empréstimo</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ====== DATA STORE ======
+let DB = JSON.parse(localStorage.getItem('bancoITV') || 'null') || {
+  clientes: [
+    {id:1, nome:'João Silva', tel:'(11) 98765-4321', cidade:'São Paulo', status:'ativo', email:'joao@email.com'},
+    {id:2, nome:'Maria Oliveira', tel:'(21) 91234-5678', cidade:'Rio de Janeiro', status:'ativo', email:'maria@email.com'},
+    {id:3, nome:'Carlos Souza', tel:'(31) 99876-5432', cidade:'Belo Horizonte', status:'ativo', email:'carlos@email.com'}
+  ],
+  emprestimos: [
+    {id:1, clienteId:1, valor:10000, parcelas:12, juros:1.99, total:12543.20, status:'ativo', data:'2026-09-15'},
+    {id:2, clienteId:2, valor:5000, parcelas:6, juros:2.49, total:5780.50, status:'ativo', data:'2026-08-20'}
+  ],
+  transacoes: [
+    {id:1, data:'2026-10-10', tipo:'deposito', cliente:'João Silva', valor:1500, desc:'Depósito em conta'},
+    {id:2, data:'2026-10-11', tipo:'pagamento', cliente:'Maria Oliveira', valor:980, desc:'Parcela empréstimo'},
+    {id:3, data:'2026-10-12', tipo:'saque', cliente:'', valor:500, desc:'Saque caixa'}
+  ],
+  saldo: 150000,
+  chats: {
+    1: [{from:'them', text:'Olá, gostaria de saber sobre empréstimos', time:'10:30'}],
+    2: [{from:'them', text:'Quando vence minha próxima parcela?', time:'09:15'}]
+  }
+};
+
+let currentChat = null;
+
+function save() { localStorage.setItem('bancoITV', JSON.stringify(DB)); }
+function fmt(v) { return 'R$ ' + Number(v).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+function toast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show ' + type;
+  setTimeout(()=>t.className='toast', 3000);
+}
+
+// ====== NAVIGATION ======
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.menu li').forEach(m => m.classList.remove('active'));
+  if (el) el.classList.add('active');
+  const titles = {dashboard:'Dashboard', clientes:'Clientes', emprestimos:'Empréstimos', simulacao:'Simulação', financeiro:'Financeiro', transacoes:'Transações', chat:'Mensagens', relatorios:'Relatórios', config:'Configurações'};
+  document.getElementById('pageTitle').textContent = titles[id] || '';
+  if (window.innerWidth <= 900) toggleSidebar(false);
+}
+
+function toggleSidebar(force) {
+  const sb = document.getElementById('sidebar');
+  const ov = document.getElementById('sidebarOverlay');
+  const open = force !== undefined ? force : !sb.classList.contains('open');
+  sb.classList.toggle('open', open);
+  ov.classList.toggle('active', open);
+}
+
+// ====== MODALS ======
+function openModal(id) {
+  document.getElementById(id).classList.add('active');
+  if (id==='modalEmprestimo') {
+    const sel = document.getElementById('eCliente');
+    sel.innerHTML = DB.clientes.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+  }
+}
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+// ====== CLIENTES (SEM CPF E RG) ======
+function saveCliente() {
+  const c = {
+    id: Date.now(),
+    nome: document.getElementById('cNome').value.trim(),
+    tel: document.getElementById('cTel').value.trim(),
+    email: document.getElementById('cEmail').value.trim(),
+    nasc: document.getElementById('cNasc').value,
+    prof: document.getElementById('cProf').value.trim(),
+    end: document.getElementById('cEnd').value.trim(),
+    cid: document.getElementById('cCid').value.trim(),
+    uf: document.getElementById('cUf').value,
+    renda: document.getElementById('cRenda').value,
+    status: document.getElementById('cStatus').value
+  };
+  if (!c.nome || !c.tel) return toast('Preencha nome e telefone', 'error');
+  DB.clientes.push(c); save();
+  toast('Cliente cadastrado com sucesso!', 'success');
+  closeModal('modalCliente');
+  ['cNome','cTel','cEmail','cNasc','cProf','cEnd','cCid','cRenda'].forEach(i => document.getElementById(i).value='');
+  renderClientes(); renderDashboard();
+}
+
+function renderClientes() {
+  const q = (document.getElementById('searchCliente')?.value || '').toLowerCase();
+  const list = DB.clientes.filter(c => c.nome.toLowerCase().includes(q) || c.tel.includes(q) || (c.email||'').toLowerCase().includes(q));
+  document.getElementById('tableClientes').innerHTML = list.map(c => `
+    <tr>
+      <td><strong>${c.nome}</strong><br><small style="color:var(--muted)">${c.email||''}</small></td>
+      <td>${c.tel}</td>
+      <td>${c.cidade||'-'}</td>
+      <td><span class="badge badge-${c.status==='ativo'?'success':c.status==='bloqueado'?'danger':'warning'}">${c.status}</span></td>
+      <td>
+        <button class="btn btn-sm btn-primary" onclick="openChat(${c.id})">💬</button>
+        <button class="btn btn-sm btn-danger" onclick="delCliente(${c.id})">🗑️</button>
+      </td>
+    </tr>
+  `).join('') || '<tr><td colspan="5" style="text-align:center; color:var(--muted); padding:20px;">Nenhum cliente encontrado</td></tr>';
+}
+
+function delCliente(id) {
+  if (!confirm('Excluir este cliente?')) return;
+  DB.clientes = DB.clientes.filter(c => c.id !== id); save();
+  renderClientes(); renderDashboard();
+  toast('Cliente excluído', 'success');
+}
+
+// ====== EMPRÉSTIMOS ======
+function saveEmprestimo() {
+  const clienteId = parseInt(document.getElementById('eCliente').value);
+  const valor = parseFloat(document.getElementById('eValor').value);
+  const parcelas = parseInt(document.getElementById('eParcelas').value);
+  const juros = parseFloat(document.getElementById('eJuros').value);
+  if (!clienteId || !valor || valor<=0) return toast('Preencha todos os campos corretamente', 'error');
+  const i = juros/100;
+  const total = valor * Math.pow(1+i, parcelas);
+  const emp = {id:Date.now(), clienteId, valor, parcelas, juros, total, status:'ativo', data: document.getElementById('eData').value || new Date().toISOString().slice(0,10)};
+  DB.emprestimos.push(emp);
+  DB.transacoes.push({id:Date.now()+1, data:emp.data, tipo:'emprestimo', cliente:DB.clientes.find(c=>c.id===clienteId).nome, valor:valor, desc:`Empréstimo concedido - ${parcelas}x`});
+  DB.saldo -= valor;
+  save();
+  toast('Empréstimo concedido com sucesso!', 'success');
+  closeModal('modalEmprestimo');
+  renderEmprestimos(); renderDashboard(); renderFinanceiro();
+}
+
+function renderEmprestimos() {
+  document.getElementById('tableEmprestimos').innerHTML = DB.emprestimos.map(e => {
+    const c = DB.clientes.find(x => x.id===e.clienteId);
+    return `<tr>
+      <td>${c?c.nome:'-'}</td>
+      <td>${fmt(e.valor)}</td>
+      <td>${e.parcelas}x</td>
+      <td>${e.juros}%</td>
+      <td>${fmt(e.total)}</td>
+      <td><span class="badge badge-${e.status==='ativo'?'success':e.status==='quitado'?'info':'danger'}">${e.status}</span></td>
+      <td>
+        ${e.status==='ativo'?`<button class="btn btn-sm btn-success" onclick="quitarEmp(${e.id})">✅ Quitar</button>`:''}
+        <button class="btn btn-sm btn-danger" onclick="delEmp(${e.id})">🗑️</button>
+      </td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="7" style="text-align:center; color:var(--muted); padding:20px;">Nenhum empréstimo</td></tr>';
+}
+
+function quitarEmp(id) {
+  const e = DB.emprestimos.find(x => x.id===id);
+  e.status = 'quitado';
+  DB.transacoes.push({id:Date.now(), data:new Date().toISOString().slice(0,10), tipo:'pagamento', cliente:DB.clientes.find(c=>c.id===e.clienteId).nome, valor:e.total, desc:'Quitação de empréstimo'});
+  DB.saldo += e.total;
+  save();
+  renderEmprestimos(); renderDashboard(); renderFinanceiro();
+  toast('Empréstimo quitado!', 'success');
+}
+
+function delEmp(id) {
+  if (!confirm('Excluir empréstimo?')) return;
+  DB.emprestimos = DB.emprestimos.filter(e => e.id !== id); save();
+  renderEmprestimos(); renderDashboard();
+}
+
+// ====== SIMULAÇÃO ======
+function simular() {
+  const v = parseFloat(document.getElementById('simValor').value);
+  const p = parseInt(document.getElementById('simParcelas').value);
+  const j = parseFloat(document.getElementById('simJuros').value)/100;
+  if (!v || v<=0) return toast('Informe um valor válido', 'error');
+  const total = v * Math.pow(1+j, p);
+  const parcela = total / p;
+  document.getElementById('simResult').innerHTML = `
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-label">Valor Solicitado</div><div class="stat-value">${fmt(v)}</div></div>
+      <div class="stat-card"><div class="stat-label">Valor da Parcela</div><div class="stat-value">${fmt(parcela)}</div></div>
+      <div class="stat-card"><div class="stat-label">Total a Pagar</div><div class="stat-value">${fmt(total)}</div></div>
+      <div class="stat-card"><div class="stat-label">Total de Juros</div><div class="stat-value" style="color:var(--danger);">${fmt(total-v)}</div></div>
+    </div>
+    <button class="btn btn-accent" style="margin-top:15px;" onclick="document.querySelector('.menu li:nth-child(3)').click(); toast('Preencha os dados do empréstimo');">💰 Solicitar este empréstimo</button>
+  `;
+}
+
+// ====== FINANCEIRO ======
+function renderFinanceiro() {
+  const entradas = DB.transacoes.filter(t => ['deposito','pagamento'].includes(t.tipo)).reduce((s,t)=>s+t.valor,0);
+  const saidas = DB.transacoes.filter(t => ['saque','emprestimo','transferencia'].includes(t.tipo)).reduce((s,t)=>s+t.valor,0);
+  document.getElementById('finEntradas').textContent = fmt(entradas);
+  document.getElementById('finSaidas').textContent = fmt(saidas);
+  document.getElementById('finSaldo').textContent = fmt(DB.saldo);
+  document.getElementById('tableFinanceiro').innerHTML = DB.transacoes.slice().reverse().map(t => `
+    <tr>
+      <td>${t.data}</td>
+      <td>${t.desc}<br><small style="color:var(--muted)">${t.cliente||''}</small></td>
+      <td><span class="badge badge-${['deposito','pagamento'].includes(t.tipo)?'success':'danger'}">${t.tipo}</span></td>
+      <td style="color:${['deposito','pagamento'].includes(t.tipo)?'var(--success)':'var(--danger)'}; font-weight:600;">
+        ${['deposito','pagamento'].includes(t.tipo)?'+':'-'} ${fmt(t.valor)}
+      </td>
+    </tr>
+  `).join('') || '<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--muted);">Nenhuma movimentação</td></tr>';
+}
+
+// ====== TRANSAÇÕES ======
+function addTransacao() {
+  const tipo = document.getElementById('trTipo').value;
+  const clienteId = document.getElementById('trCliente').value;
+  const valor = parseFloat(document.getElementById('trValor').value);
+  const desc = document.getElementById('trDesc').value.trim();
+  if (!valor || valor<=0) return toast('Informe um valor válido', 'error');
+  const cliente = clienteId ? DB.clientes.find(c=>c.id==clienteId).nome : '';
+  DB.transacoes.push({id:Date.now(), data:new Date().toISOString().slice(0,10), tipo, cliente, valor, desc});
+  if (['deposito','pagamento'].includes(tipo)) DB.saldo += valor;
+  else DB.saldo -= valor;
+  save();
+  toast('Transação registrada!', 'success');
+  ['trValor','trDesc'].forEach(i => document.getElementById(i).value='');
+  renderFinanceiro(); renderDashboard();
+}
+
+function renderTransSelect() {
+  document.getElementById('trCliente').innerHTML = '<option value="">-- Selecione --</option>' + DB.clientes.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+}
+
+// ====== CHAT ======
+function renderChatList() {
+  document.getElementById('chatList').innerHTML = DB.clientes.map(c => {
+    const msgs = DB.chats[c.id] || [];
+    const last = msgs[msgs.length-1];
+    return `<div class="chat-item ${currentChat===c.id?'active':''}" onclick="openChat(${c.id})">
+      <div class="chat-avatar">${c.nome[0]}</div>
+      <div class="chat-info">
+        <div class="chat-name">${c.nome}</div>
+        <div class="chat-last">${last?last.text:'Sem mensagens'}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openChat(id) {
+  currentChat = id;
+  if (!DB.chats[id]) DB.chats[id] = [];
+  const c = DB.clientes.find(x => x.id===id);
+  document.getElementById('chatHeader').innerHTML = `
+    <div class="chat-avatar">${c.nome[0]}</div>
+    <div><strong>${c.nome}</strong><br><small style="color:var(--muted)">${c.tel||''}</small></div>
+  `;
+  renderChatList();
+  renderChatMessages();
+  showPage('chat', document.querySelectorAll('.menu li')[6]);
+}
+
+function renderChatMessages() {
+  if (!currentChat) return;
+  const msgs = DB.chats[currentChat] || [];
+  document.getElementById('chatMessages').innerHTML = msgs.map(m => `
+    <div class="msg ${m.from}">
+      ${m.text}
+      <div class="msg-time">${m.time}</div>
+    </div>
+  `).join('');
+  const box = document.getElementById('chatMessages');
+  box.scrollTop = box.scrollHeight;
+}
+
+function sendMsg() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text || !currentChat) return;
+  if (!DB.chats[currentChat]) DB.chats[currentChat] = [];
+  const time = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+  DB.chats[currentChat].push({from:'me', text, time});
+  save();
+  input.value = '';
+  renderChatMessages(); renderChatList();
+  setTimeout(() => {
+    DB.chats[currentChat].push({from:'them', text:'Obrigado pela mensagem! Retornarei em breve.', time: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})});
+    save(); renderChatMessages(); renderChatList();
+  }, 1500);
+}
+
+// ====== DASHBOARD ======
+function renderDashboard() {
+  const totalEmp = DB.emprestimos.reduce((s,e)=>s+e.valor,0);
+  document.getElementById('statEmprestado').textContent = fmt(totalEmp);
+  document.getElementById('statClientes').textContent = DB.clientes.length;
+  document.getElementById('statAtivos').textContent = DB.emprestimos.filter(e=>e.status==='ativo').length;
+  document.getElementById('statSaldo').textContent = fmt(DB.saldo);
+  
+  const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out'];
+  const values = months.map(() => Math.floor(Math.random()*50000)+10000);
+  const max = Math.max(...values);
+  document.getElementById('chartBars').innerHTML = months.map((m,i) => `
+    <div class="chart-col">
+      <div class="chart-bar-fill" style="height:${(values[i]/max)*100}%;" title="${fmt(values[i])}"></div>
+      <div class="chart-label">${m}</div>
+    </div>
+  `).join('');
+  
+  document.getElementById('recentTrans').innerHTML = DB.transacoes.slice(-5).reverse().map(t => `
+    <tr>
+      <td>${t.data}</td>
+      <td>${t.cliente||'-'}</td>
+      <td><span class="badge badge-${['deposito','pagamento'].includes(t.tipo)?'success':'danger'}">${t.tipo}</span></td>
+      <td>${fmt(t.valor)}</td>
+      <td><span class="badge badge-success">Concluído</span></td>
+    </tr>
+  `).join('');
+}
+
+// ====== RELATÓRIOS ======
+function renderRelatorios() {
+  const total = DB.emprestimos.length;
+  const aberto = DB.emprestimos.filter(e=>e.status==='ativo').length;
+  const quitado = DB.emprestimos.filter(e=>e.status==='quitado').length;
+  const inad = DB.emprestimos.filter(e=>e.status==='inadimplente').length;
+  document.getElementById('repTotal').textContent = total;
+  document.getElementById('repAberto').textContent = aberto;
+  document.getElementById('repQuitado').textContent = quitado;
+  document.getElementById('repInad').textContent = inad;
+  
+  const data = [
+    {label:'Ativos', value:aberto, color:'var(--success)'},
+    {label:'Quitados', value:quitado, color:'var(--primary)'},
+    {label:'Inadimplentes', value:inad, color:'var(--danger)'}
+  ];
+  const maxV = Math.max(...data.map(d=>d.value), 1);
+  document.getElementById('repChart').innerHTML = data.map(d => `
+    <div style="flex:1; min-width:150px; background:#f9fafb; padding:15px; border-radius:10px; border-left:4px solid ${d.color};">
+      <div style="font-size:12px; color:var(--muted);">${d.label}</div>
+      <div style="font-size:24px; font-weight:700; color:${d.color};">${d.value}</div>
+      <div style="background:#e5e7eb; height:6px; border-radius:3px; margin-top:8px;">
+        <div style="background:${d.color}; height:100%; width:${(d.value/maxV)*100}%; border-radius:3px;"></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ====== RENDER ALL ======
+function renderAll() {
+  renderDashboard();
+  renderClientes();
+  renderEmprestimos();
+  renderFinanceiro();
+  renderTransSelect();
+  renderChatList();
+  renderRelatorios();
+}
+
+// Inicialização direta - sem login
+renderAll();
+</script>
+</body>
+</html>
