@@ -2,521 +2,1057 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#0a1929">
-<title>ITVPlayer - IPTV Profissional</title>
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<title>ITVPlayer</title>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js"></script>
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; font-family:'Segoe UI',Roboto,Arial,sans-serif; }
-  html,body { width:100%; height:100%; overflow:hidden; background:#0a1929; color:#fff; user-select:none; }
-  body { display:flex; flex-direction:column; }
+:root{
+  --bg:#000;--surface:#0c0c11;--surface-2:#15151d;--surface-3:#1c1c26;
+  --border:#24242f;--accent:#ff3b30;--accent-2:#ff7a18;
+  --grad:linear-gradient(135deg,#ff3b30 0%,#ff7a18 100%);
+  --text:#f5f5f7;--muted:#8a8a99;--radius:14px;
+  --shadow:0 8px 32px rgba(0,0,0,.6);--glow:0 0 24px rgba(255,59,48,.35);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{width:100%;height:100%;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,sans-serif;
+  overflow:hidden;overscroll-behavior:none}
+button,input{font-family:inherit;color:inherit;outline:none;border:none;background:none}
+button{cursor:pointer}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#2a2a36;border-radius:8px}
+::-webkit-scrollbar-thumb:hover{background:#3a3a48}
 
-  /* HEADER */
-  .header { background:linear-gradient(90deg,#0a1929,#1a2942); padding:12px 16px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #1e3a5f; box-shadow:0 2px 10px rgba(0,0,0,.5); z-index:10; }
-  .logo { font-size:20px; font-weight:bold; color:#00d4ff; letter-spacing:1px; }
-  .logo span { color:#fff; }
-  .header-btn { background:none; border:none; color:#fff; font-size:22px; cursor:pointer; padding:6px 10px; border-radius:6px; }
-  .header-btn:hover { background:rgba(255,255,255,.1); }
+/* ====== SCREENS ====== */
+.screen{position:fixed;inset:0;display:none;opacity:0;transition:opacity .28s ease}
+.screen.active{display:flex;opacity:1;animation:fade .3s ease}
+@keyframes fade{from{opacity:0;transform:scale(.99)}to{opacity:1;transform:scale(1)}}
 
-  /* SCREENS */
-  .screen { display:none; flex:1; overflow-y:auto; padding:16px; animation:fadeIn .3s; }
-  .screen.active { display:block; }
-  @keyframes fadeIn { from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);} }
+/* ====== LOGIN ====== */
+#loginScreen{align-items:center;justify-content:center;
+  background:radial-gradient(circle at 20% 30%,#1a0a0a 0%,#000 55%),
+             radial-gradient(circle at 85% 75%,#1a1005 0%,transparent 60%)}
+.login-card{width:min(440px,92vw);max-height:94vh;overflow:auto;padding:32px 28px;
+  background:linear-gradient(180deg,rgba(20,20,28,.92),rgba(10,10,14,.95));
+  border:1px solid var(--border);border-radius:22px;box-shadow:var(--shadow);
+  backdrop-filter:blur(20px);animation:pop .45s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes pop{from{opacity:0;transform:translateY(24px) scale(.96)}to{opacity:1;transform:none}}
+.brand{display:flex;align-items:center;gap:14px;margin-bottom:26px}
+.brand-logo{width:52px;height:52px;border-radius:14px;background:var(--grad);
+  display:grid;place-items:center;font-weight:800;font-size:17px;color:#fff;
+  letter-spacing:.5px;box-shadow:var(--glow)}
+.brand h1{font-size:24px;font-weight:800;letter-spacing:-.4px;
+  background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand p{font-size:12px;color:var(--muted);margin-top:2px}
+.brand.small .brand-logo{width:36px;height:36px;border-radius:10px;font-size:12px}
+.brand.small h1{font-size:18px}
 
-  /* LOGIN */
-  #loginScreen { display:none; align-items:center; justify-content:center; background:radial-gradient(circle at top,#1a2942,#0a1929); }
-  #loginScreen.active { display:flex; }
-  .login-box { background:rgba(20,35,60,.85); padding:32px 28px; border-radius:16px; width:92%; max-width:420px; box-shadow:0 20px 60px rgba(0,0,0,.6); border:1px solid #1e3a5f; }
-  .login-box h1 { text-align:center; color:#00d4ff; margin-bottom:6px; font-size:28px; }
-  .login-box p.sub { text-align:center; color:#8aa; margin-bottom:24px; font-size:13px; }
-  .form-group { margin-bottom:16px; }
-  .form-group label { display:block; margin-bottom:6px; color:#8aa; font-size:13px; font-weight:600; }
-  .form-group input { width:100%; padding:12px 14px; background:#0a1929; border:1px solid #1e3a5f; border-radius:8px; color:#fff; font-size:15px; outline:none; transition:.2s; }
-  .form-group input:focus { border-color:#00d4ff; box-shadow:0 0 0 3px rgba(0,212,255,.15); }
-  .btn-primary { width:100%; padding:14px; background:linear-gradient(135deg,#00d4ff,#0077ff); border:none; border-radius:8px; color:#fff; font-size:16px; font-weight:bold; cursor:pointer; margin-top:8px; transition:.2s; }
-  .btn-primary:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,212,255,.4); }
-  .btn-primary:disabled { opacity:.6; cursor:not-allowed; }
-  .error-msg { color:#ff5252; text-align:center; margin-top:12px; font-size:13px; min-height:18px; }
+#loginForm{display:flex;flex-direction:column;gap:14px}
+#loginForm label{display:flex;flex-direction:column;gap:7px}
+#loginForm label>span{font-size:12px;color:var(--muted);font-weight:600;
+  text-transform:uppercase;letter-spacing:.6px}
+#loginForm input[type=text],#loginForm input[type=password],#loginForm input[type=url]{
+  padding:14px 16px;background:var(--surface-2);border:1px solid var(--border);
+  border-radius:12px;font-size:15px;color:var(--text);transition:.2s}
+#loginForm input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,59,48,.15)}
+.remember{flex-direction:row!important;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.remember input{accent-color:var(--accent)}
+.btn-primary{margin-top:8px;padding:15px;border-radius:12px;background:var(--grad);
+  color:#fff;font-weight:700;font-size:15px;letter-spacing:.4px;
+  box-shadow:0 6px 20px rgba(255,59,48,.35);transition:.2s}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 26px rgba(255,59,48,.5)}
+.btn-primary:active{transform:translateY(0)}
+.btn-primary:disabled{opacity:.6;cursor:wait}
+.login-msg{margin-top:14px;font-size:13px;text-align:center;color:#ff6b6b;min-height:18px}
 
-  /* MAIN - 3 JANELAS */
-  .main-title { text-align:center; font-size:22px; margin:16px 0 24px; color:#fff; }
-  .main-title small { display:block; color:#8aa; font-size:13px; margin-top:4px; }
-  .main-grid { display:flex; flex-direction:column; gap:18px; max-width:600px; margin:0 auto; }
-  .main-card { background:linear-gradient(135deg,#1a3a6e,#0d2240); border-radius:16px; padding:28px 24px; cursor:pointer; transition:.25s; border:1px solid #1e3a5f; display:flex; align-items:center; gap:20px; box-shadow:0 8px 24px rgba(0,0,0,.4); }
-  .main-card:hover { transform:translateY(-4px); box-shadow:0 12px 32px rgba(0,212,255,.25); border-color:#00d4ff; }
-  .main-card:active { transform:scale(.98); }
-  .card-icon { font-size:48px; width:70px; height:70px; display:flex; align-items:center; justify-content:center; background:rgba(0,212,255,.15); border-radius:14px; flex-shrink:0; }
-  .card-info h3 { font-size:20px; margin-bottom:4px; }
-  .card-info p { color:#8aa; font-size:13px; }
+/* ====== TOPBAR ====== */
+.topbar{display:flex;align-items:center;gap:16px;padding:14px 22px;
+  background:linear-gradient(180deg,rgba(12,12,17,.95),rgba(12,12,17,.7));
+  border-bottom:1px solid var(--border);backdrop-filter:blur(16px);z-index:10}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.user-tag{font-size:13px;color:var(--muted);padding:6px 12px;border:1px solid var(--border);
+  border-radius:20px;background:var(--surface-2)}
+.icon-btn{width:42px;height:42px;border-radius:11px;background:var(--surface-2);
+  border:1px solid var(--border);display:grid;place-items:center;font-size:17px;
+  color:var(--text);transition:.2s}
+.icon-btn:hover{background:var(--surface-3);border-color:var(--accent);color:var(--accent)}
+.icon-btn:active{transform:scale(.95)}
 
-  /* CATEGORIES / LIST */
-  .list-container { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:12px; }
-  .list-item { background:linear-gradient(135deg,#1a3a6e,#0d2240); border-radius:10px; padding:16px 12px; cursor:pointer; text-align:center; transition:.2s; border:1px solid #1e3a5f; min-height:80px; display:flex; align-items:center; justify-content:center; }
-  .list-item:hover { background:linear-gradient(135deg,#2a4a8e,#1a3260); border-color:#00d4ff; transform:translateY(-2px); }
-  .list-item span { font-size:14px; font-weight:500; word-break:break-word; }
+/* ====== MAIN MENU ====== */
+#mainScreen{flex-direction:column}
+.main-menu{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:22px;
+  padding:32px;place-content:center;max-width:1400px;margin:0 auto;width:100%}
+.menu-card{position:relative;overflow:hidden;padding:36px 24px;border-radius:22px;
+  background:linear-gradient(160deg,var(--surface-2),var(--surface));
+  border:1px solid var(--border);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:12px;min-height:220px;
+  transition:transform .3s cubic-bezier(.2,.9,.3,1.2),border-color .3s,box-shadow .3s}
+.menu-card::before{content:"";position:absolute;inset:0;
+  background:radial-gradient(circle at 50% 0%,rgba(255,59,48,.18),transparent 70%);
+  opacity:0;transition:opacity .3s}
+.menu-card:hover,.menu-card:focus{transform:translateY(-6px);
+  border-color:var(--accent);box-shadow:var(--shadow),var(--glow)}
+.menu-card:hover::before{opacity:1}
+.menu-icon{font-size:56px;filter:drop-shadow(0 4px 12px rgba(255,59,48,.5));
+  margin-bottom:6px;position:relative;z-index:1}
+.menu-card h2{font-size:26px;font-weight:800;letter-spacing:.5px;position:relative;z-index:1}
+.menu-card p{font-size:13px;color:var(--muted);position:relative;z-index:1}
 
-  /* CHANNELS / MOVIES */
-  .channel-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; }
-  .channel-card { background:#142340; border-radius:10px; overflow:hidden; cursor:pointer; transition:.2s; border:1px solid #1e3a5f; }
-  .channel-card:hover { border-color:#00d4ff; transform:translateY(-2px); }
-  .channel-thumb { width:100%; aspect-ratio:16/10; background:#0a1929; display:flex; align-items:center; justify-content:center; font-size:32px; color:#00d4ff; overflow:hidden; }
-  .channel-thumb img { width:100%; height:100%; object-fit:cover; }
-  .channel-name { padding:10px; font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .channel-quality { position:absolute; top:4px; right:4px; background:#00d4ff; color:#000; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:4px; }
-  .channel-card { position:relative; }
+/* ====== BROWSE ====== */
+#browseScreen{flex-direction:column}
+#browseScreen .topbar h2{font-size:18px;font-weight:700}
+.search-wrap{margin-left:auto;flex:0 1 320px}
+.search-wrap input{width:100%;padding:11px 16px;background:var(--surface-2);
+  border:1px solid var(--border);border-radius:11px;font-size:14px;transition:.2s}
+.search-wrap input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,59,48,.15)}
+.browse-body{flex:1;display:flex;min-height:0}
+.categories{width:280px;flex-shrink:0;overflow-y:auto;background:var(--surface);
+  border-right:1px solid var(--border);padding:12px}
+.cat-item{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:13px 14px;margin-bottom:6px;border-radius:10px;font-size:14px;
+  color:var(--muted);cursor:pointer;transition:.18s;border:1px solid transparent}
+.cat-item:hover{background:var(--surface-2);color:var(--text)}
+.cat-item.active{background:linear-gradient(90deg,rgba(255,59,48,.18),transparent);
+  color:var(--text);border-color:rgba(255,59,48,.4);border-left:3px solid var(--accent)}
+.cat-item .count{font-size:11px;padding:2px 8px;border-radius:8px;
+  background:var(--surface-3);color:var(--muted)}
+.content{flex:1;overflow-y:auto;padding:22px;min-height:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));
+  gap:16px;padding-bottom:30px}
+.card{position:relative;border-radius:14px;overflow:hidden;background:var(--surface-2);
+  border:1px solid var(--border);cursor:pointer;transition:.25s;aspect-ratio:2/3}
+.card:hover,.card:focus{transform:translateY(-4px);border-color:var(--accent);
+  box-shadow:var(--shadow),0 0 0 1px var(--accent) inset}
+.card img{width:100%;height:100%;object-fit:cover;display:block;background:#111}
+.card .ph{width:100%;height:100%;display:grid;place-items:center;color:var(--muted);
+  font-size:32px;background:linear-gradient(160deg,#1a1a24,#0e0e14)}
+.card .info{position:absolute;left:0;right:0;bottom:0;padding:26px 10px 10px;
+  background:linear-gradient(transparent,rgba(0,0,0,.94));font-size:12px;
+  font-weight:600;line-height:1.3;text-shadow:0 1px 3px #000}
+.card .badge{position:absolute;top:8px;right:8px;font-size:10px;padding:3px 7px;
+  border-radius:6px;background:rgba(0,0,0,.75);color:#fff;font-weight:700;
+  text-transform:uppercase;letter-spacing:.4px;backdrop-filter:blur(6px)}
+.empty{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--muted);font-size:14px}
 
-  /* PLAYER */
-  #playerScreen { padding:0; overflow:hidden; background:#000; display:none; flex-direction:column; }
-  #playerScreen.active { display:flex; }
-  .player-wrap { flex:1; position:relative; background:#000; display:flex; align-items:center; justify-content:center; }
-  #videoPlayer { width:100%; height:100%; background:#000; }
-  .player-controls { position:absolute; bottom:0; left:0; right:0; background:linear-gradient(transparent,rgba(0,0,0,.9)); padding:16px; display:flex; flex-direction:column; gap:8px; opacity:0; transition:.3s; }
-  .player-wrap:hover .player-controls, .player-controls.show { opacity:1; }
-  .player-title { font-size:15px; font-weight:600; }
-  .player-row { display:flex; align-items:center; gap:12px; }
-  .player-btn { background:rgba(255,255,255,.1); border:none; color:#fff; width:40px; height:40px; border-radius:50%; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; }
-  .player-btn:hover { background:rgba(0,212,255,.3); }
-  .player-back { position:absolute; top:12px; left:12px; z-index:5; background:rgba(0,0,0,.6); border:none; color:#fff; width:44px; height:44px; border-radius:50%; cursor:pointer; font-size:20px; }
+/* ====== LOADER ====== */
+.loader{position:absolute;inset:0;display:none;place-items:center;
+  background:rgba(0,0,0,.5);backdrop-filter:blur(3px);z-index:5}
+.loader.show{display:grid}
+.spinner{width:44px;height:44px;border-radius:50%;
+  border:3px solid rgba(255,255,255,.15);border-top-color:var(--accent);
+  animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-  /* LOADING */
-  .loader { display:inline-block; width:18px; height:18px; border:2px solid rgba(255,255,255,.3); border-top-color:#00d4ff; border-radius:50%; animation:spin .8s linear infinite; vertical-align:middle; margin-right:8px; }
-  @keyframes spin { to { transform:rotate(360deg); } }
+/* ====== PLAYER ====== */
+#playerScreen{background:#000;z-index:100}
+#videoEl{position:absolute;inset:0;width:100%;height:100%;background:#000;object-fit:contain}
+.player-overlay{position:absolute;inset:0;opacity:1;transition:opacity .35s;
+  pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;
+  background:linear-gradient(180deg,rgba(0,0,0,.75) 0%,transparent 22%,
+    transparent 72%,rgba(0,0,0,.85) 100%)}
+.player-overlay.hide{opacity:0}
+.player-overlay.hide *{pointer-events:none}
+.player-top,.player-bottom{padding:16px 22px;pointer-events:auto;display:flex;
+  align-items:center;gap:14px}
+.player-title{font-size:15px;font-weight:700;flex:1;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.player-actions{display:flex;gap:10px}
+.progress{width:100%;height:4px;background:rgba(255,255,255,.15);border-radius:4px;
+  overflow:hidden;margin-bottom:12px;cursor:pointer}
+.progress-bar{height:100%;width:0;background:var(--grad);border-radius:4px;transition:width .15s linear}
+.controls{display:flex;align-items:center;gap:14px;font-size:13px;color:#ddd}
+.controls input[type=range]{flex:1;accent-color:var(--accent);height:5px;cursor:pointer}
+#btnPlay{width:44px;height:44px;border-radius:50%;background:var(--grad);
+  display:grid;place-items:center;font-size:16px;color:#fff;box-shadow:var(--glow)}
+#timeLabel{min-width:110px;font-variant-numeric:tabular-nums;font-size:12px;color:#bbb}
+#volume{max-width:110px}
+.player-loading{position:absolute;inset:0;display:none;place-items:center;
+  background:rgba(0,0,0,.7);z-index:10}
+.player-loading.show{display:grid}
 
-  /* BACK BUTTON */
-  .back-bar { display:flex; align-items:center; gap:10px; margin-bottom:16px; }
-  .back-btn { background:rgba(255,255,255,.08); border:none; color:#fff; padding:8px 14px; border-radius:8px; cursor:pointer; font-size:14px; }
-  .back-btn:hover { background:rgba(0,212,255,.2); }
-  .screen-title { font-size:18px; font-weight:600; }
+/* ====== MODAL ====== */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);
+  display:none;align-items:center;justify-content:center;z-index:200;padding:20px}
+.modal.show{display:flex;animation:fade .2s}
+.modal-box{width:min(560px,92vw);max-height:85vh;overflow-y:auto;
+  background:var(--surface-2);border:1px solid var(--border);border-radius:18px;
+  padding:24px;box-shadow:var(--shadow)}
+.modal-box h3{font-size:17px;margin-bottom:16px}
+.episode-item{display:flex;align-items:center;gap:12px;padding:12px 14px;
+  margin-bottom:8px;border-radius:11px;background:var(--surface-3);
+  cursor:pointer;transition:.18s;border:1px solid transparent}
+.episode-item:hover{background:#20202c;border-color:var(--accent)}
+.episode-item .num{width:34px;height:34px;border-radius:9px;background:var(--grad);
+  display:grid;place-items:center;font-weight:700;font-size:13px;flex-shrink:0}
+.episode-item .meta{flex:1;min-width:0}
+.episode-item .meta b{display:block;font-size:13.5px;font-weight:600;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.episode-item .meta small{font-size:11px;color:var(--muted)}
+.season-title{margin:16px 0 8px;font-size:12px;color:var(--accent);
+  font-weight:700;letter-spacing:1px;text-transform:uppercase}
 
-  /* TOAST */
-  .toast { position:fixed; bottom:30px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,.85); color:#fff; padding:10px 20px; border-radius:24px; font-size:14px; z-index:1000; opacity:0; transition:.3s; pointer-events:none; }
-  .toast.show { opacity:1; }
+/* ====== ROTATE ====== */
+/* Forçado a permanecer oculto conforme solicitado, sem mensagem de rotação */
+#rotate{position:fixed;inset:0;background:#000;display:none !important;z-index:999;
+  flex-direction:column;align-items:center;justify-content:center;gap:20px;color:#fff}
+#rotate .icon{font-size:64px;animation:rot 1.6s ease-in-out infinite}
+@keyframes rot{0%,100%{transform:rotate(0)}50%{transform:rotate(90deg)}}
+@media (orientation:portrait) and (max-width:900px){
+  #rotate{display:none !important}
+}
 
-  /* SCROLLBAR */
-  ::-webkit-scrollbar { width:8px; }
-  ::-webkit-scrollbar-track { background:#0a1929; }
-  ::-webkit-scrollbar-thumb { background:#1e3a5f; border-radius:4px; }
-  ::-webkit-scrollbar-thumb:hover { background:#00d4ff; }
+/* ====== RESPONSIVO ====== */
+@media (max-width:900px){
+  .categories{width:220px}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
+  .content{padding:14px}
+  .menu-card{min-height:180px;padding:24px 16px}
+  .menu-icon{font-size:44px}
+  .menu-card h2{font-size:22px}
+  .main-menu{gap:14px;padding:18px}
+  .topbar{padding:10px 14px}
+  .user-tag{display:none}
+}
+@media (max-width:640px){
+  .categories{position:absolute;left:0;top:0;bottom:0;z-index:20;
+    transform:translateX(-100%);transition:.3s;width:75%}
+  .categories.open{transform:none;box-shadow:8px 0 30px rgba(0,0,0,.8)}
+  .browse-body{position:relative}
+}
 
-  @media (max-width:480px) {
-    .main-card { padding:20px 16px; }
-    .card-icon { font-size:36px; width:58px; height:58px; }
-    .card-info h3 { font-size:17px; }
-    .list-container { grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); }
-    .channel-grid { grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); }
+
+/* ====== CANVAS EM PAISAGEM NO CELULAR ======
+   Em navegador móvel, a página não pode mudar a orientação física do aparelho.
+   Esta regra gira o canvas da aplicação quando o aparelho está em retrato,
+   mantendo a interface e o player dispostos como em paisagem. */
+#appViewport{position:fixed;inset:0;width:100%;height:100%;overflow:hidden}
+@supports (height: 100dvh){
+  #appViewport{height:100dvh}
+}
+@media (orientation:portrait) and (max-width:900px){
+  #appViewport{
+    inset:auto;
+    top:0;
+    left:0;
+    width:100vh;
+    height:100vw;
+    transform-origin:top left;
+    transform:rotate(90deg) translateY(-100%);
   }
+}
+@supports (height:100dvh){
+  @media (orientation:portrait) and (max-width:900px){
+    #appViewport{width:100dvh;height:100dvw}
+  }
+}
 </style>
 </head>
 <body>
+<div id="appViewport">
 
-<!-- HEADER -->
-<div class="header" id="mainHeader">
-  <div class="logo">ITV<span>Player</span></div>
-  <button class="header-btn" onclick="logout()" title="Sair">⏻</button>
-</div>
-
-<!-- LOGIN SCREEN -->
-<div class="screen active" id="loginScreen">
-  <div class="login-box">
-    <h1>ITVPlayer</h1>
-    <p class="sub">IPTV Profissional • Smarters Style</p>
-    <div class="form-group">
-      <label>Usuário</label>
-      <input type="text" id="loginUser" placeholder="Digite seu usuário" autocomplete="username">
-    </div>
-    <div class="form-group">
-      <label>Senha</label>
-      <input type="password" id="loginPass" placeholder="Digite sua senha" autocomplete="current-password">
-    </div>
-    <div class="form-group">
-      <label>URL do Servidor</label>
-      <input type="url" id="loginUrl" placeholder="http://servidor.com:porta" autocomplete="url">
-    </div>
-    <button class="btn-primary" id="loginBtn" onclick="doLogin()">ENTRAR</button>
-    <div class="error-msg" id="loginError"></div>
+<!-- AVISO DE ROTAÇÃO (Mantido na estrutura, mas desativado via CSS) -->
+<div id="rotate">
+  <div class="icon">📱</div>
+  <div style="text-align:center">
+    <h2 style="font-size:20px;margin-bottom:8px">Gire o dispositivo</h2>
+    <p style="color:#8a8a99;font-size:14px">O ITVPlayer funciona em modo paisagem</p>
   </div>
 </div>
 
-<!-- MAIN SCREEN -->
-<div class="screen" id="mainScreen">
-  <h2 class="main-title">Bem-vindo ao ITVPlayer<small>Escolha uma categoria para começar</small></h2>
-  <div class="main-grid">
-    <div class="main-card" onclick="openSection('tv')">
-      <div class="card-icon">📺</div>
-      <div class="card-info"><h3>TV ao Vivo</h3><p>Canais SD, HD e FHD em tempo real</p></div>
+<!-- ================= LOGIN ================= -->
+<section id="loginScreen" class="screen active">
+  <div class="login-card">
+    <div class="brand">
+      <div class="brand-logo">ITV</div>
+      <div>
+        <h1>ITVPlayer</h1>
+        <p>Streaming IPTV & P2P</p>
+      </div>
     </div>
-    <div class="main-card" onclick="openSection('movies')">
-      <div class="card-icon">🎬</div>
-      <div class="card-info"><h3>Filmes</h3><p>Catálogo completo de filmes</p></div>
+    <form id="loginForm" autocomplete="on">
+      <label>
+        <span>URL do Servidor</span>
+        <input id="inUrl" type="url" inputmode="url" placeholder="http://servidor.com:8080" required>
+      </label>
+      <label>
+        <span>Usuário</span>
+        <input id="inUser" type="text" placeholder="Usuário" required>
+      </label>
+      <label>
+        <span>Senha</span>
+        <input id="inPass" type="password" placeholder="Senha" required>
+      </label>
+      <label class="remember">
+        <input type="checkbox" id="inRemember" checked>
+        <span>Manter sessão conectada</span>
+      </label>
+      <button type="submit" class="btn-primary" id="btnLogin">ENTRAR</button>
+    </form>
+    <p class="login-msg" id="loginMsg"></p>
+  </div>
+</section>
+
+<!-- ================= MAIN ================= -->
+<section id="mainScreen" class="screen">
+  <header class="topbar">
+    <div class="brand small">
+      <div class="brand-logo">ITV</div>
+      <h1>ITVPlayer</h1>
     </div>
-    <div class="main-card" onclick="openSection('series')">
-      <div class="card-icon">🎭</div>
-      <div class="card-info"><h3>Séries</h3><p>Temporadas e episódios</p></div>
+    <div class="topbar-right">
+      <span class="user-tag" id="userTag"></span>
+      <button class="icon-btn" id="logoutBtn" title="Sair">⏻</button>
     </div>
+  </header>
+  <div class="main-menu">
+    <button class="menu-card" data-section="live">
+      <div class="menu-icon">📺</div>
+      <h2>TV</h2>
+      <p>Canais ao vivo</p>
+    </button>
+    <button class="menu-card" data-section="vod">
+      <div class="menu-icon">🎬</div>
+      <h2>FILMES</h2>
+      <p>Vídeo sob demanda</p>
+    </button>
+    <button class="menu-card" data-section="series">
+      <div class="menu-icon">📽️</div>
+      <h2>SÉRIES</h2>
+      <p>Temporadas & Episódios</p>
+    </button>
   </div>
-</div>
+</section>
 
-<!-- CATEGORIES SCREEN -->
-<div class="screen" id="categoriesScreen">
-  <div class="back-bar">
-    <button class="back-btn" onclick="showScreen('mainScreen')">← Voltar</button>
-    <div class="screen-title" id="catTitle">Categorias</div>
-  </div>
-  <div class="list-container" id="categoriesList"></div>
-</div>
-
-<!-- ITEMS SCREEN (channels/movies/series) -->
-<div class="screen" id="itemsScreen">
-  <div class="back-bar">
-    <button class="back-btn" onclick="showScreen('categoriesScreen')">← Voltar</button>
-    <div class="screen-title" id="itemsTitle">Itens</div>
-  </div>
-  <div class="channel-grid" id="itemsList"></div>
-</div>
-
-<!-- SERIES SEASONS -->
-<div class="screen" id="seasonsScreen">
-  <div class="back-bar">
-    <button class="back-btn" onclick="showScreen('itemsScreen')">← Voltar</button>
-    <div class="screen-title" id="seasonsTitle">Temporadas</div>
-  </div>
-  <div class="list-container" id="seasonsList"></div>
-</div>
-
-<!-- EPISODES -->
-<div class="screen" id="episodesScreen">
-  <div class="back-bar">
-    <button class="back-btn" onclick="showScreen('seasonsScreen')">← Voltar</button>
-    <div class="screen-title" id="episodesTitle">Episódios</div>
-  </div>
-  <div class="channel-grid" id="episodesList"></div>
-</div>
-
-<!-- PLAYER SCREEN -->
-<div class="screen" id="playerScreen">
-  <div class="player-wrap">
-    <button class="player-back" onclick="closePlayer()">←</button>
-    <video id="videoPlayer" controls playsinline autoplay></video>
-    <div class="player-controls show">
-      <div class="player-title" id="playerTitle">Reproduzindo...</div>
+<!-- ================= BROWSE ================= -->
+<section id="browseScreen" class="screen">
+  <header class="topbar">
+    <button class="icon-btn" id="backBtn" title="Voltar">←</button>
+    <h2 id="browseTitle">TV</h2>
+    <div class="search-wrap">
+      <input id="searchInput" type="text" placeholder="🔍  Buscar...">
     </div>
+  </header>
+  <div class="browse-body">
+    <aside class="categories" id="catList"></aside>
+    <main class="content" style="position:relative">
+      <div class="grid" id="itemGrid"></div>
+      <div class="loader" id="browseLoader"><div class="spinner"></div></div>
+    </main>
   </div>
-</div>
+</section>
 
-<div class="toast" id="toast"></div>
+<!-- ================= PLAYER ================= -->
+<section id="playerScreen" class="screen">
+  <video id="videoEl" playsinline webkit-playsinline controlslist="nodownload"></video>
+  <div class="player-loading" id="playerLoading"><div class="spinner"></div></div>
+  <div class="player-overlay" id="playerOverlay">
+    <header class="player-top">
+      <button class="icon-btn" id="closePlayer" title="Voltar">←</button>
+      <div class="player-title" id="playerTitle">Reproduzindo</div>
+      <div class="player-actions">
+        <button class="icon-btn" id="btnP2P" title="Carregar link P2P">P2P</button>
+        <button class="icon-btn" id="btnFull" title="Tela cheia">⛶</button>
+      </div>
+    </header>
+    <footer class="player-bottom" style="display:block">
+      <div class="progress" id="progress"><div class="progress-bar" id="progressBar"></div></div>
+      <div class="controls">
+        <button id="btnPlay">▶</button>
+        <span id="timeLabel">00:00 / 00:00</span>
+        <input type="range" id="seek" min="0" max="1000" value="0">
+        <span style="font-size:16px">🔊</span>
+        <input type="range" id="volume" min="0" max="1" step="0.02" value="1">
+      </div>
+    </footer>
+  </div>
+</section>
+
+<!-- ================= MODAL ================= -->
+<div class="modal" id="modal"><div class="modal-box" id="modalBox"></div></div>
 
 <script>
-/* ============ ITVPlayer - Core ============ */
-const state = {
-  user:'', pass:'', url:'',
+/* =========================================================
+   ITVPlayer - Core
+   ========================================================= */
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+const State = {
+  base:'', user:'', pass:'',
   section:null,
-  categories:[],
-  items:[],
-  currentSeries:null,
-  hls:null,
-  isXtream:false
+  categories:[], items:[],
+  activeCategory:null,
+  hls:null, wt:null, objectUrl:null,
+  currentItem:null,
+  hideTimer:null
 };
 
-/* ---------- Screen Navigation ---------- */
+/* ---------- Navegação entre telas ---------- */
 function showScreen(id){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  $$('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  document.getElementById('mainHeader').style.display = (id==='playerScreen'||id==='loginScreen') ? 'none' : 'flex';
 }
 
-function toast(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2200);
+/* ---------- Orientação paisagem ---------- */
+async function lockLandscape(){
+  // O CSS mantém o canvas em paisagem mesmo quando o navegador não autoriza
+  // bloquear a orientação física (comum em abas móveis e no iOS).
+  try{
+    if(screen.orientation && typeof screen.orientation.lock === 'function'){
+      await screen.orientation.lock('landscape');
+      return true;
+    }
+    const legacyLock = screen.lockOrientation || screen.mozLockOrientation || screen.msLockOrientation;
+    if(typeof legacyLock === 'function') return legacyLock.call(screen, 'landscape');
+  }catch(e){ /* A rotação visual por CSS continua ativa. */ }
+  return false;
 }
+window.addEventListener('orientationchange', lockLandscape);
 
-/* ---------- Login ---------- */
-async function doLogin(){
-  const u=document.getElementById('loginUser').value.trim();
-  const p=document.getElementById('loginPass').value.trim();
-  let url=document.getElementById('loginUrl').value.trim();
-  const err=document.getElementById('loginError');
-  const btn=document.getElementById('loginBtn');
-  err.textContent='';
-  if(!u||!p||!url){ err.textContent='Preencha todos os campos'; return; }
-  if(!/^https?:\/\//i.test(url)) url='http://'+url;
-  url=url.replace(/\/+$/,'');
+/* =========================================================
+   LOGIN
+   ========================================================= */
+const loginForm = $('#loginForm');
+const loginMsg  = $('#loginMsg');
+const btnLogin  = $('#btnLogin');
 
-  btn.disabled=true; btn.innerHTML='<span class="loader"></span>Conectando...';
-
-  state.user=u; state.pass=p; state.url=url;
-
-  // Tenta Xtream Codes API
+function loadSaved(){
   try{
-    const apiUrl=`${url}/player_api.php?username=${encodeURIComponent(u)}&password=${encodeURIComponent(p)}`;
-    const r=await fetch(apiUrl);
-    if(r.ok){
-      const data=await r.json();
-      if(data.user_info && data.user_info.auth){
-        state.isXtream=true;
-        localStorage.setItem('itvplayer',JSON.stringify({u,p,url}));
-        toast('✓ Login realizado (Xtream)');
-        showScreen('mainScreen');
-        btn.disabled=false; btn.textContent='ENTRAR';
-        return;
-      }
-    }
-  }catch(e){ /* fallback M3U */ }
-
-  // Tenta M3U
-  try{
-    const m3uUrl=`${url}/get.php?username=${encodeURIComponent(u)}&password=${encodeURIComponent(p)}&type=m3u_plus&output=ts`;
-    const r=await fetch(m3uUrl);
-    if(r.ok){
-      const txt=await r.text();
-      if(txt.includes('#EXTM3U')){
-        state.isXtream=false;
-        state.m3uData=parseM3U(txt);
-        localStorage.setItem('itvplayer',JSON.stringify({u,p,url}));
-        toast('✓ Login realizado (M3U)');
-        showScreen('mainScreen');
-        btn.disabled=false; btn.textContent='ENTRAR';
-        return;
-      }
-    }
+    const raw = localStorage.getItem('itvplayer.session');
+    if(!raw) return;
+    const s = JSON.parse(raw);
+    if(s.url)  $('#inUrl').value  = s.url;
+    if(s.user) $('#inUser').value = s.user;
+    if(s.pass) $('#inPass').value = s.pass;
+    if(s.url && s.user && s.pass) autoLogin(s);
   }catch(e){}
-
-  // Modo demo se tudo falhar (apenas para teste de UI)
-  err.textContent='Não foi possível conectar. Verifique os dados.';
-  btn.disabled=false; btn.textContent='ENTRAR';
 }
 
-function logout(){
-  if(!confirm('Deseja sair?')) return;
-  localStorage.removeItem('itvplayer');
-  location.reload();
+async function autoLogin(s){
+  btnLogin.disabled = true;
+  loginMsg.textContent = 'Reconectando...';
+  const ok = await tryLogin(s.url, s.user, s.pass);
+  if(ok) enterApp();
+  else { loginMsg.textContent = ''; btnLogin.disabled = false; }
 }
 
-/* ---------- M3U Parser ---------- */
-function parseM3U(text){
-  const lines=text.split(/\r?\n/);
-  const data={live:[],movies:[],series:[]};
-  let current=null;
-  for(let i=0;i<lines.length;i++){
-    const l=lines[i].trim();
-    if(l.startsWith('#EXTINF')){
-      const grp=(l.match(/group-title="([^"]*)"/)||[])[1]||'Sem categoria';
-      const logo=(l.match(/tvg-logo="([^"]*)"/)||[])[1]||'';
-      const name=l.split(',').slice(1).join(',').trim();
-      current={name,group:grp,logo,url:''};
-      const gl=grp.toLowerCase();
-      if(/\b(filme|movie|vod|film)\b/.test(gl)) current._type='movies';
-      else if(/\b(série|serie|series|epis)\b/.test(gl)) current._type='series';
-      else current._type='live';
-    } else if(l && !l.startsWith('#') && current){
-      current.url=l;
-      data[current._type].push(current);
-      current=null;
-    }
-  }
-  return data;
-}
-
-/* ---------- Open Section ---------- */
-async function openSection(sec){
-  state.section=sec;
-  const titles={tv:'TV ao Vivo',movies:'Filmes',series:'Séries'};
-  document.getElementById('catTitle').textContent=titles[sec];
-  document.getElementById('categoriesList').innerHTML='<div class="loader"></div> Carregando...';
-  showScreen('categoriesScreen');
-
+async function tryLogin(url, user, pass){
+  url = url.trim().replace(/\/+$/,'');
+  if(!/^https?:\/\//i.test(url)) url = 'http://' + url;
   try{
-    if(state.isXtream){
-      let action={tv:'get_live_categories',movies:'get_vod_categories',series:'get_series_categories'}[sec];
-      const r=await fetch(`${state.url}/player_api.php?username=${encodeURIComponent(state.user)}&password=${encodeURIComponent(state.pass)}&action=${action}`);
-      const data=await r.json();
-      state.categories=Array.isArray(data)?data:[];
-    } else {
-      const key={tv:'live',movies:'movies',series:'series'}[sec];
-      const map={};
-      state.m3uData[key].forEach(it=>{
-        if(!map[it.group]) map[it.group]={category_id:it.group,category_name:it.group};
-      });
-      state.categories=Object.values(map);
+    const api = `${url}/player_api.php?username=${encodeURIComponent(user)}&password=${encodeURIComponent(pass)}`;
+    const res = await fetch(api, {cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if(data && data.user_info && Number(data.user_info.auth) === 1){
+      State.base = url; State.user = user; State.pass = pass;
+      return true;
     }
+    return false;
+  }catch(err){
+    console.error('Login error:', err);
+    return null; // erro de rede
+  }
+}
+
+loginForm.addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const url  = $('#inUrl').value;
+  const user = $('#inUser').value;
+  const pass = $('#inPass').value;
+  btnLogin.disabled = true;
+  loginMsg.style.color = '#ff6b6b';
+  loginMsg.textContent = 'Conectando ao servidor...';
+
+  const ok = await tryLogin(url, user, pass);
+  btnLogin.disabled = false;
+
+  if(ok === true){
+    loginMsg.style.color = '#4ade80';
+    loginMsg.textContent = 'Conectado!';
+    if($('#inRemember').checked){
+      localStorage.setItem('itvplayer.session', JSON.stringify({
+        url: State.base, user, pass
+      }));
+    } else {
+      localStorage.removeItem('itvplayer.session');
+    }
+    setTimeout(enterApp, 250);
+  } else if(ok === false){
+    loginMsg.style.color = '#ff6b6b';
+    loginMsg.textContent = 'Usuário, senha ou URL inválidos.';
+  } else {
+    loginMsg.style.color = '#ff6b6b';
+    loginMsg.textContent = 'Não foi possível conectar. Verifique o servidor.';
+  }
+});
+
+function enterApp(){
+  $('#userTag').textContent = State.user;
+  $('#loginMsg').textContent = '';
+  showScreen('mainScreen');
+  lockLandscape();
+}
+
+$('#logoutBtn').addEventListener('click', ()=>{
+  localStorage.removeItem('itvplayer.session');
+  destroyPlayer();
+  State.base = State.user = State.pass = '';
+  loginForm.reset();
+  loginMsg.textContent = '';
+  showScreen('loginScreen');
+});
+
+/* =========================================================
+   API XTREAM
+   ========================================================= */
+async function apiRequest(action, extra = {}){
+  const params = new URLSearchParams({
+    username: State.user, password: State.pass, action, ...extra
+  });
+  const url = `${State.base}/player_api.php?${params.toString()}`;
+  const res = await fetch(url, {cache:'no-store'});
+  if(!res.ok) throw new Error('HTTP ' + res.status);
+  return res.json();
+}
+
+/* =========================================================
+   MENU PRINCIPAL
+   ========================================================= */
+$$('.menu-card').forEach(btn => {
+  btn.addEventListener('click', ()=>{
+    openSection(btn.dataset.section);
+  });
+});
+
+async function openSection(section){
+  State.section = section;
+  State.categories = [];
+  State.items = [];
+  State.activeCategory = null;
+  const titles = { live:'TV ao Vivo', vod:'Filmes', series:'Séries' };
+  $('#browseTitle').textContent = titles[section];
+  $('#searchInput').value = '';
+  showScreen('browseScreen');
+  await loadCategories();
+}
+
+/* =========================================================
+   CATEGORIAS
+   ========================================================= */
+const catList     = $('#catList');
+const itemGrid    = $('#itemGrid');
+const browseLoader= $('#browseLoader');
+
+async function loadCategories(){
+  catList.innerHTML = '';
+  itemGrid.innerHTML = '';
+  browseLoader.classList.add('show');
+  try{
+    const action = State.section === 'live'   ? 'get_live_categories'
+                 : State.section === 'vod'    ? 'get_vod_categories'
+                 :                              'get_series_categories';
+    const cats = await apiRequest(action);
+    State.categories = Array.isArray(cats) ? cats : [];
     renderCategories();
-  }catch(e){
-    document.getElementById('categoriesList').innerHTML='<p style="color:#ff5252">Erro ao carregar categorias</p>';
+    if(State.categories.length){
+      // Abre "Todas" ou primeira categoria automaticamente
+      selectCategory(State.categories[0]);
+    } else {
+      itemGrid.innerHTML = '<div class="empty">Nenhuma categoria disponível.</div>';
+    }
+  }catch(err){
+    console.error(err);
+    itemGrid.innerHTML = '<div class="empty">Erro ao carregar categorias.</div>';
+  }finally{
+    browseLoader.classList.remove('show');
   }
 }
 
 function renderCategories(){
-  const list=document.getElementById('categoriesList');
-  if(!state.categories.length){ list.innerHTML='<p>Nenhuma categoria encontrada</p>'; return; }
-  list.innerHTML=state.categories.map(c=>`
-    <div class="list-item" onclick="openCategory('${c.category_id}','${(c.category_name||'').replace(/'/g,"\\'")}')">
-      <span>${c.category_name||'Sem nome'}</span>
-    </div>`).join('');
+  catList.innerHTML = '';
+  // Botão "Todos"
+  const allBtn = document.createElement('div');
+  allBtn.className = 'cat-item';
+  allBtn.innerHTML = `<span>📚 Todas as categorias</span>`;
+  allBtn.addEventListener('click', ()=> selectCategory({category_id:'', category_name:'Todas'}));
+  catList.appendChild(allBtn);
+
+  State.categories.forEach(c => {
+    const el = document.createElement('div');
+    el.className = 'cat-item';
+    el.dataset.id = c.category_id;
+    const name = c.category_name || 'Sem nome';
+    el.innerHTML = `<span>${escapeHtml(name)}</span>`;
+    el.addEventListener('click', ()=> selectCategory(c));
+    catList.appendChild(el);
+  });
 }
 
-/* ---------- Open Category ---------- */
-async function openCategory(catId,catName){
-  document.getElementById('itemsTitle').textContent=catName;
-  document.getElementById('itemsList').innerHTML='<div class="loader"></div> Carregando...';
-  showScreen('itemsScreen');
-
-  try{
-    if(state.isXtream){
-      let action={tv:'get_live_streams',movies:'get_vod_streams',series:'get_series'}[state.section];
-      const r=await fetch(`${state.url}/player_api.php?username=${encodeURIComponent(state.user)}&password=${encodeURIComponent(state.pass)}&action=${action}&category_id=${catId}`);
-      const data=await r.json();
-      state.items=Array.isArray(data)?data:[];
-    } else {
-      const key={tv:'live',movies:'movies',series:'series'}[state.section];
-      state.items=state.m3uData[key].filter(it=>it.group===catId);
-    }
-    renderItems();
-  }catch(e){
-    document.getElementById('itemsList').innerHTML='<p style="color:#ff5252">Erro ao carregar</p>';
+function markActiveCategory(id){
+  $$('.cat-item').forEach(el=>{
+    el.classList.toggle('active', String(el.dataset.id||'') === String(id||''));
+  });
+  // primeiro item ("Todos") não tem dataset.id
+  if(!id){
+    const first = catList.querySelector('.cat-item');
+    if(first) first.classList.add('active');
   }
 }
 
-function renderItems(){
-  const list=document.getElementById('itemsList');
-  if(!state.items.length){ list.innerHTML='<p>Nenhum item encontrado</p>'; return; }
-  list.innerHTML=state.items.map((it,idx)=>{
-    const name=it.name||it.title||'Sem nome';
-    const logo=it.stream_icon||it.cover||it.logo||'';
-    const quality=it.rating||it.added||'';
-    const thumb=logo?`<img src="${logo}" onerror="this.parentElement.innerHTML='🎬'">`:'';
-    return `
-    <div class="channel-card" onclick="selectItem(${idx})">
-      <div class="channel-thumb">${thumb||'🎬'}</div>
-      <div class="channel-name">${name}</div>
-    </div>`;
-  }).join('');
+async function selectCategory(cat){
+  State.activeCategory = cat;
+  markActiveCategory(cat.category_id);
+  browseLoader.classList.add('show');
+  itemGrid.innerHTML = '';
+  try{
+    const action = State.section === 'live' ? 'get_live_streams'
+                 : State.section === 'vod'  ? 'get_vod_streams'
+                 :                            'get_series';
+    const extra = cat.category_id ? { category_id: cat.category_id } : {};
+    const items = await apiRequest(action, extra);
+    State.items = Array.isArray(items) ? items : [];
+    renderItems(State.items);
+  }catch(err){
+    console.error(err);
+    itemGrid.innerHTML = '<div class="empty">Erro ao carregar conteúdo.</div>';
+  }finally{
+    browseLoader.classList.remove('show');
+  }
 }
 
-/* ---------- Select Item ---------- */
-async function selectItem(idx){
-  const it=state.items[idx];
-  if(state.section==='series' && state.isXtream){
-    state.currentSeries=it;
-    document.getElementById('seasonsTitle').textContent=it.name;
-    document.getElementById('seasonsList').innerHTML='<div class="loader"></div> Carregando...';
-    showScreen('seasonsScreen');
-    try{
-      const r=await fetch(`${state.url}/player_api.php?username=${encodeURIComponent(state.user)}&password=${encodeURIComponent(state.pass)}&action=get_series_info&series_id=${it.series_id}`);
-      const data=await r.json();
-      state.seriesInfo=data;
-      const seasons=Object.keys(data.episodes||{}).sort((a,b)=>a-b);
-      document.getElementById('seasonsList').innerHTML=seasons.map(s=>`
-        <div class="list-item" onclick="openSeason('${s}')"><span>Temporada ${s}</span></div>
-      `).join('') || '<p>Sem temporadas</p>';
-    }catch(e){ document.getElementById('seasonsList').innerHTML='<p>Erro</p>'; }
+/* =========================================================
+   LISTAGEM DE ITENS
+   ========================================================= */
+function escapeHtml(s){
+  return String(s||'').replace(/[&<>"']/g, c=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+
+function proxyImg(url){
+  return url; // imagens Xtream costumam funcionar direto
+}
+
+function renderItems(list){
+  itemGrid.innerHTML = '';
+  if(!list.length){
+    itemGrid.innerHTML = '<div class="empty">Nenhum conteúdo nesta categoria.</div>';
     return;
   }
-  // TV ou Filme - play direto
-  playItem(it);
-}
+  const frag = document.createDocumentFragment();
+  list.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.tabIndex = 0;
 
-function openSeason(sNum){
-  const eps=state.seriesInfo.episodes[sNum]||[];
-  document.getElementById('episodesTitle').textContent=`Temporada ${sNum}`;
-  document.getElementById('episodesList').innerHTML=eps.map((ep,i)=>`
-    <div class="channel-card" onclick='playEpisode(${JSON.stringify(ep).replace(/'/g,"&#39;")})'>
-      <div class="channel-thumb">${ep.info&&ep.info.movie_image?`<img src="${ep.info.movie_image}">`:'🎭'}</div>
-      <div class="channel-name">E${ep.episode_num} - ${ep.title||'Episódio '+ep.episode_num}</div>
-    </div>
-  `).join('');
-  showScreen('episodesScreen');
-}
-
-function playEpisode(ep){
-  const ext=ep.container_extension||'mp4';
-  const url=`${state.url}/series/${encodeURIComponent(state.user)}/${encodeURIComponent(state.pass)}/${ep.id}.${ext}`;
-  playUrl(url, ep.title||'Episódio');
-}
-
-/* ---------- Player ---------- */
-function playItem(it){
-  let url,title;
-  if(state.isXtream){
-    if(state.section==='tv'){
-      url=`${state.url}/live/${encodeURIComponent(state.user)}/${encodeURIComponent(state.pass)}/${it.stream_id}.m3u8`;
-      title=it.name;
-    } else if(state.section==='movies'){
-      const ext=it.container_extension||'mp4';
-      url=`${state.url}/movie/${encodeURIComponent(state.user)}/${encodeURIComponent(state.pass)}/${it.stream_id}.${ext}`;
-      title=it.name;
+    let poster = '';
+    if(State.section === 'live'){
+      poster = item.stream_icon || '';
+    } else if(State.section === 'vod'){
+      poster = item.stream_icon || item.movie_image || '';
+    } else {
+      poster = item.cover || '';
     }
-  } else {
-    url=it.url; title=it.name;
-  }
-  playUrl(url,title);
+
+    const title = item.name || item.title || 'Sem título';
+    const badge = State.section === 'live' ? 'AO VIVO'
+                : State.section === 'vod'  ? 'FILME'
+                :                            'SÉRIE';
+
+    const ph = `<div class="ph">${State.section==='live'?'📺':State.section==='vod'?'🎬':'📽️'}</div>`;
+    const img = poster
+      ? `<img loading="lazy" src="${escapeHtml(proxyImg(poster))}" onerror="this.style.display='none';this.parentNode.insertAdjacentHTML('afterbegin','${ph.replace(/'/g,"\\'")}')">`
+      : ph;
+
+    card.innerHTML = `${img}<div class="badge">${badge}</div>
+      <div class="info">${escapeHtml(title)}</div>`;
+
+    card.addEventListener('click', ()=> onItemClick(item));
+    card.addEventListener('keydown', e=>{
+      if(e.key === 'Enter') onItemClick(item);
+    });
+    frag.appendChild(card);
+  });
+  itemGrid.appendChild(frag);
 }
 
-function playUrl(url,title){
-  document.getElementById('playerTitle').textContent=title||'Reproduzindo';
+function onItemClick(item){
+  if(State.section === 'series'){
+    openSeries(item);
+  } else {
+    playItem(item);
+  }
+}
+
+/* =========================================================
+   BUSCA
+   ========================================================= */
+$('#searchInput').addEventListener('input', e=>{
+  const q = e.target.value.trim().toLowerCase();
+  if(!q){ renderItems(State.items); return; }
+  const filtered = State.items.filter(it =>
+    (it.name || it.title || '').toLowerCase().includes(q)
+  );
+  renderItems(filtered);
+});
+
+/* =========================================================
+   SÉRIES - EPISÓDIOS
+   ========================================================= */
+async function openSeries(series){
+  const modal = $('#modal');
+  const box   = $('#modalBox');
+  box.innerHTML = `<h3>${escapeHtml(series.name)}</h3><div class="loader show" style="position:static;background:none"><div class="spinner"></div></div>`;
+  modal.classList.add('show');
+
+  try{
+    const info = await apiRequest('get_series_info', { series_id: series.series_id });
+    const eps  = info && info.episodes ? info.episodes : {};
+    box.innerHTML = `<h3>${escapeHtml(series.name)}</h3>`;
+    const seasons = Object.keys(eps).sort((a,b)=> Number(a)-Number(b));
+    if(!seasons.length){
+      box.innerHTML += '<div class="empty">Sem episódios disponíveis.</div>';
+      return;
+    }
+    seasons.forEach(season=>{
+      const title = document.createElement('div');
+      title.className = 'season-title';
+      title.textContent = `Temporada ${season}`;
+      box.appendChild(title);
+
+      (eps[season]||[]).forEach(ep=>{
+        const el = document.createElement('div');
+        el.className = 'episode-item';
+        const num = ep.episode_num || '•';
+        const label = ep.title || `Episódio ${num}`;
+        el.innerHTML = `
+          <div class="num">${num}</div>
+          <div class="meta">
+            <b>${escapeHtml(label)}</b>
+            <small>Temporada ${season} · Episódio ${num}</small>
+          </div>`;
+        el.addEventListener('click', ()=>{
+          modal.classList.remove('show');
+          playEpisode(series, ep);
+        });
+        box.appendChild(el);
+      });
+    });
+  }catch(err){
+    console.error(err);
+    box.innerHTML = `<h3>${escapeHtml(series.name)}</h3><div class="empty">Erro ao carregar episódios.</div>`;
+  }
+}
+
+$('#modal').addEventListener('click', e=>{
+  if(e.target.id === 'modal') $('#modal').classList.remove('show');
+});
+
+/* =========================================================
+   PLAYER
+   ========================================================= */
+const videoEl       = $('#videoEl');
+const playerOverlay = $('#playerOverlay');
+const playerTitle   = $('#playerTitle');
+const playerLoading = $('#playerLoading');
+
+function buildStreamUrl(item, ep){
+  const base = State.base, u = State.user, p = State.pass;
+  if(State.section === 'live'){
+    const ext = (item.container_extension || 'm3u8').replace(/^\./,'');
+    return `${base}/live/${u}/${p}/${item.stream_id}.${ext}`;
+  }
+  if(State.section === 'vod'){
+    const ext = (item.container_extension || 'mp4').replace(/^\./,'');
+    return `${base}/movie/${u}/${p}/${item.stream_id}.${ext}`;
+  }
+  if(State.section === 'series' && ep){
+    const ext = (ep.container_extension || 'mp4').replace(/^\./,'');
+    return `${base}/series/${u}/${p}/${ep.id}.${ext}`;
+  }
+  return '';
+}
+
+function playItem(item){
+  State.currentItem = item;
+  const url = buildStreamUrl(item);
+  playerTitle.textContent = item.name || item.title || 'Reproduzindo';
   showScreen('playerScreen');
-  const video=document.getElementById('videoPlayer');
+  lockLandscape();
+  playUrl(url);
+  enterFullscreen();
+}
 
-  // Limpa player anterior (anti-travamento)
-  if(state.hls){ try{state.hls.destroy();}catch(e){} state.hls=null; }
-  video.pause(); video.removeAttribute('src'); video.load();
+function playEpisode(series, ep){
+  State.currentItem = { ...series, __ep: ep };
+  const url = buildStreamUrl(series, ep);
+  playerTitle.textContent = `${series.name} — T${ep.season}E${ep.episode_num}`;
+  showScreen('playerScreen');
+  lockLandscape();
+  playUrl(url);
+  enterFullscreen();
+}
 
-  // Anti-travamento: buffer otimizado
-  video.buffered && (video.currentTime=0);
+function playUrl(url){
+  destroyPlayer();
+  playerLoading.classList.add('show');
+  const isHls = /\.m3u8(\?|$)/i.test(url);
 
-  if(url.includes('.m3u8') && window.Hls && Hls.isSupported()){
-    const hls=new Hls({
-      maxBufferLength:30,
-      maxMaxBufferLength:60,
-      startFragPrefetch:true,
-      enableWorker:true,
-      lowLatencyMode:false,
-      backBufferLength:30
+  if(isHls && window.Hls && Hls.isSupported()){
+    const hls = new Hls({
+      enableWorker: true,
+      lowLatencyMode: false,
+      backBufferLength: 90,
+      maxBufferLength: 30,
+      liveSyncDurationCount: 3,
+      manifestLoadingTimeOut: 15000,
+      manifestLoadingMaxRetry: 4,
+      levelLoadingMaxRetry: 4,
+      fragLoadingMaxRetry: 6
     });
     hls.loadSource(url);
-    hls.attachMedia(video);
-    hls.on(Hls.Events.MANIFEST_PARSED,()=>video.play().catch(()=>{}));
-    hls.on(Hls.Events.ERROR,(e,data)=>{
+    hls.attachMedia(videoEl);
+    hls.on(Hls.Events.MANIFEST_PARSED, ()=>{ videoEl.play().catch(()=>{}); });
+    hls.on(Hls.Events.ERROR, (e, data)=>{
       if(data.fatal){
-        switch(data.type){
-          case Hls.ErrorTypes.NETWORK_ERROR: hls.startLoad(); break;
-          case Hls.ErrorTypes.MEDIA_ERROR: hls.recoverMediaError(); break;
-          default: toast('Erro: tente novamente'); closePlayer(); break;
-        }
+        console.warn('HLS fatal:', data);
+        if(data.type === Hls.ErrorTypes.NETWORK_ERROR) hls.startLoad();
+        else if(data.type === Hls.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError();
       }
     });
-    state.hls=hls;
+    State.hls = hls;
+  } else if(videoEl.canPlayType('application/vnd.apple.mpegurl') && isHls){
+    // Safari / iOS nativo
+    videoEl.src = url;
+    videoEl.play().catch(()=>{});
   } else {
-    video.src=url;
-    video.play().catch(err=>toast('Erro ao reproduzir'));
+    videoEl.src = url;
+    videoEl.play().catch(()=>{});
   }
 }
 
-function closePlayer(){
-  const video=document.getElementById('videoPlayer');
-  if(state.hls){ try{state.hls.destroy();}catch(e){} state.hls=null; }
-  video.pause(); video.removeAttribute('src'); video.load();
-  // Volta para tela anterior
-  if(document.getElementById('episodesScreen').style.display!=='none' && state.section==='series') showScreen('episodesScreen');
-  else showScreen('itemsScreen');
+function destroyPlayer(){
+  try{ if(State.hls){ State.hls.destroy(); State.hls = null; } }catch(e){}
+  try{ if(State.wt){ State.wt.destroy(()=>{}); State.wt = null; } }catch(e){}
+  if(State.objectUrl){ URL.revokeObjectURL(State.objectUrl); State.objectUrl = null; }
+  try{
+    videoEl.pause();
+    videoEl.removeAttribute('src');
+    videoEl.load();
+  }catch(e){}
 }
 
-/* ---------- Auto-login ---------- */
-window.addEventListener('load',()=>{
-  const saved=localStorage.getItem('itvplayer');
-  if(saved){
-    try{
-      const d=JSON.parse(saved);
-      document.getElementById('loginUser').value=d.u;
-      document.getElementById('loginPass').value=d.p;
-      document.getElementById('loginUrl').value=d.url;
-    }catch(e){}
+/* Eventos do player */
+videoEl.addEventListener('loadeddata', ()=> playerLoading.classList.remove('show'));
+videoEl.addEventListener('playing',    ()=> playerLoading.classList.remove('show'));
+videoEl.addEventListener('waiting',    ()=> playerLoading.classList.add('show'));
+videoEl.addEventListener('canplay',    ()=> playerLoading.classList.remove('show'));
+videoEl.addEventListener('error', ()=>{
+  playerLoading.classList.remove('show');
+  console.warn('Erro no vídeo. Tentando novamente...');
+});
+
+videoEl.addEventListener('timeupdate', ()=>{
+  const d = videoEl.duration, c = videoEl.currentTime;
+  if(isFinite(d) && d > 0){
+    $('#progressBar').style.width = (c/d*100) + '%';
+    $('#seek').value = Math.floor(c/d*1000);
+    $('#timeLabel').textContent = fmt(c) + ' / ' + fmt(d);
+  } else {
+    $('#timeLabel').textContent = 'AO VIVO';
+  }
+});
+videoEl.addEventListener('play',  ()=> $('#btnPlay').textContent = '⏸');
+videoEl.addEventListener('pause', ()=> $('#btnPlay').textContent = '▶');
+
+function fmt(s){
+  s = Math.max(0, Math.floor(s));
+  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+  return (h?String(h).padStart(2,'0')+':':'') +
+         String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');
+}
+
+/* Controles */
+$('#btnPlay').addEventListener('click', ()=>{
+  if(videoEl.paused) videoEl.play(); else videoEl.pause();
+});
+$('#seek').addEventListener('input', e=>{
+  const d = videoEl.duration;
+  if(isFinite(d) && d > 0) videoEl.currentTime = (e.target.value/1000)*d;
+});
+$('#volume').addEventListener('input', e=>{
+  videoEl.volume = parseFloat(e.target.value);
+});
+$('#progress').addEventListener('click', e=>{
+  const d = videoEl.duration; if(!isFinite(d) || d<=0) return;
+  const r = e.currentTarget.getBoundingClientRect();
+  videoEl.currentTime = ((e.clientX - r.left)/r.width)*d;
+});
+$('#closePlayer').addEventListener('click', ()=>{
+  destroyPlayer();
+  exitFullscreen();
+  showScreen('browseScreen');
+});
+
+/* Fullscreen */
+function enterFullscreen(){
+  const el = $('#playerScreen');
+  try{
+    let request = null;
+    if(el.requestFullscreen) request = el.requestFullscreen();
+    else if(el.webkitRequestFullscreen) request = el.webkitRequestFullscreen();
+    else if(videoEl.webkitEnterFullscreen) videoEl.webkitEnterFullscreen(); // iOS Safari
+    if(request && typeof request.then === 'function'){
+      request.then(()=>lockLandscape()).catch(()=>{});
+    }
+  }catch(e){}
+}
+function exitFullscreen(){
+  try{
+    if(document.fullscreenElement) document.exitFullscreen();
+    else if(document.webkitFullscreenElement) document.webkitExitFullscreen();
+  }catch(e){}
+}
+$('#btnFull').addEventListener('click', ()=>{
+  if(document.fullscreenElement) exitFullscreen();
+  else enterFullscreen();
+});
+
+/* Auto-hide dos controles */
+function showControls(){
+  playerOverlay.classList.remove('hide');
+  clearTimeout(State.hideTimer);
+  State.hideTimer = setTimeout(()=>{
+    if(!videoEl.paused) playerOverlay.classList.add('hide');
+  }, 3500);
+}
+$('#playerScreen').addEventListener('mousemove', showControls);
+$('#playerScreen').addEventListener('touchstart', showControls);
+$('#playerScreen').addEventListener('click', e=>{
+  if(e.target === videoEl){ showControls(); }
+});
+
+/* =========================================================
+   P2P (WebTorrent) — Híbrido
+   ========================================================= */
+$('#btnP2P').addEventListener('click', async ()=>{
+  const link = prompt('Cole o link P2P (magnet: ou .torrent):', '');
+  if(!link) return;
+  playerLoading.classList.add('show');
+  try{
+    await ensureWebTorrent();
+    if(State.hls){ State.hls.destroy(); State.hls=null; }
+    if(State.wt){ State.wt.destroy(()=>{}); }
+    const client = new WebTorrent();
+    State.wt = client;
+    client.add(link, torrent=>{
+      const file = torrent.files
+        .filter(f=>/\.(mp4|webm|mkv|m4v|mov)$/i.test(f.name))
+        .sort((a,b)=> b.length - a.length)[0];
+      if(!file) throw new Error('Nenhum vídeo encontrado no torrent');
+      const url = file.streamToMediaSource
+        ? file.streamToMediaSource()
+        : null;
+      if(url){
+        videoEl.src = url;
+        videoEl.play().catch(()=>{});
+      } else {
+        file.getBlobURL((err, blobUrl)=>{
+          if(err) throw err;
+          State.objectUrl = blobUrl;
+          videoEl.src = blobUrl;
+          videoEl.play().catch(()=>{});
+        });
+      }
+    });
+    client.on('error', err=>{
+      console.error('WebTorrent error:', err);
+      playerLoading.classList.remove('show');
+      alert('Erro P2P: ' + err.message);
+    });
+  }catch(err){
+    console.error(err);
+    playerLoading.classList.remove('show');
+    alert('Não foi possível carregar o link P2P.');
   }
 });
 
-// Tecla ESC fecha player
-document.addEventListener('keydown',e=>{
-  if(e.key==='Escape' && document.getElementById('playerScreen').classList.contains('active')) closePlayer();
+function ensureWebTorrent(){
+  return new Promise((resolve, reject)=>{
+    if(window.WebTorrent) return resolve();
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/webtorrent@latest/webtorrent.min.js';
+    s.onload = ()=> resolve();
+    s.onerror = ()=> reject(new Error('Falha ao carregar WebTorrent'));
+    document.head.appendChild(s);
+  });
+}
+
+/* =========================================================
+   BOTÃO VOLTAR
+   ========================================================= */
+$('#backBtn').addEventListener('click', ()=>{
+  destroyPlayer();
+  showScreen('mainScreen');
+  State.section = null;
+  State.items = [];
+  State.categories = [];
 });
+
+/* =========================================================
+   TECLADO / CONTROLE REMOTO
+   ========================================================= */
+document.addEventListener('keydown', e=>{
+  const playerActive = $('#playerScreen').classList.contains('active');
+
+  if(e.key === 'Escape'){
+    if($('#modal').classList.contains('show')){ $('#modal').classList.remove('show'); return; }
+    if(playerActive){ $('#closePlayer').click(); return; }
+    if($('#browseScreen').classList.contains('active')){ $('#backBtn').click(); }
+    return;
+  }
+
+  if(playerActive){
+    if(e.key === ' '){ e.preventDefault(); $('#btnPlay').click(); }
+    else if(e.key === 'ArrowRight') videoEl.currentTime += 10;
+    else if(e.key === 'ArrowLeft')  videoEl.currentTime -= 10;
+    else if(e.key === 'ArrowUp'){ videoEl.volume = Math.min(1, videoEl.volume+0.1); $('#volume').value = videoEl.volume; }
+    else if(e.key === 'ArrowDown'){ videoEl.volume = Math.max(0, videoEl.volume-0.1); $('#volume').value = videoEl.volume; }
+    else if(e.key === 'f' || e.key === 'F'){ $('#btnFull').click(); }
+    showControls();
+  }
+});
+
+/* =========================================================
+   INIT
+   ========================================================= */
+(function init(){
+  // Solicita travamento em paisagem imediatamente ao iniciar
+  lockLandscape();
+  loadSaved();
+
+  // Força tentativa de fullscreen no primeiro clique do usuário (gesto)
+  const firstClick = ()=>{
+    lockLandscape();
+    document.removeEventListener('click', firstClick);
+  };
+  document.addEventListener('click', firstClick, { once:true });
+
+  // PWA: prevent double-tap zoom em iOS
+  let lastTouch = 0;
+  document.addEventListener('touchend', e=>{
+    const now = Date.now();
+    if(now - lastTouch < 300) e.preventDefault();
+    lastTouch = now;
+  }, { passive:false });
+})();
 </script>
+</div><!-- /#appViewport -->
 </body>
 </html>
