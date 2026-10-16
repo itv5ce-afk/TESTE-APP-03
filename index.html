@@ -37,38 +37,60 @@ button{cursor:pointer}
 #loginScreen{align-items:center;justify-content:center;
   background:radial-gradient(circle at 20% 30%,#1a0a0a 0%,#000 55%),
              radial-gradient(circle at 85% 75%,#1a1005 0%,transparent 60%)}
-.login-card{width:min(440px,92vw);max-height:94vh;overflow:auto;padding:32px 28px;
-  background:linear-gradient(180deg,rgba(20,20,28,.92),rgba(10,10,14,.95));
-  border:1px solid var(--border);border-radius:22px;box-shadow:var(--shadow);
-  backdrop-filter:blur(20px);animation:pop .45s cubic-bezier(.2,.9,.3,1.2)}
-@keyframes pop{from{opacity:0;transform:translateY(24px) scale(.96)}to{opacity:1;transform:none}}
-.brand{display:flex;align-items:center;gap:14px;margin-bottom:26px}
-.brand-logo{width:52px;height:52px;border-radius:14px;background:var(--grad);
-  display:grid;place-items:center;font-weight:800;font-size:17px;color:#fff;
-  letter-spacing:.5px;box-shadow:var(--glow)}
-.brand h1{font-size:24px;font-weight:800;letter-spacing:-.4px;
-  background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
-.brand p{font-size:12px;color:var(--muted);margin-top:2px}
-.brand.small .brand-logo{width:36px;height:36px;border-radius:10px;font-size:12px}
-.brand.small h1{font-size:18px}
 
-#loginForm{display:flex;flex-direction:column;gap:14px}
-#loginForm label{display:flex;flex-direction:column;gap:7px}
-#loginForm label>span{font-size:12px;color:var(--muted);font-weight:600;
-  text-transform:uppercase;letter-spacing:.6px}
+/* Logo e Nome no canto superior esquerdo da tela de login */
+#loginScreen .brand {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  margin-bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+#loginScreen .brand .brand-logo {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  font-size: 11px;
+}
+#loginScreen .brand h1 {
+  font-size: 17px;
+}
+#loginScreen .brand p {
+  display: none;
+}
+
+/* Card de login compacto (~6cm de largura x ~6cm de altura) */
+.login-card{
+  width:min(230px, 90vw);
+  max-height:250px;
+  overflow-y:auto;
+  padding:14px 12px;
+  background:linear-gradient(180deg,rgba(20,20,28,.92),rgba(10,10,14,.95));
+  border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);
+  backdrop-filter:blur(20px);animation:pop .45s cubic-bezier(.2,.9,.3,1.2);
+  display:flex;flex-direction:column;justify-content:center;
+}
+@keyframes pop{from{opacity:0;transform:translateY(24px) scale(.96)}to{opacity:1;transform:none}}
+
+#loginForm{display:flex;flex-direction:column;gap:6px}
+#loginForm label{display:flex;flex-direction:column;gap:2px}
+#loginForm label>span{font-size:9px;color:var(--muted);font-weight:600;
+  text-transform:uppercase;letter-spacing:.3px}
 #loginForm input[type=text],#loginForm input[type=password],#loginForm input[type=url]{
-  padding:14px 16px;background:var(--surface-2);border:1px solid var(--border);
-  border-radius:12px;font-size:15px;color:var(--text);transition:.2s}
-#loginForm input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,59,48,.15)}
-.remember{flex-direction:row!important;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
-.remember input{accent-color:var(--accent)}
-.btn-primary{margin-top:8px;padding:15px;border-radius:12px;background:var(--grad);
-  color:#fff;font-weight:700;font-size:15px;letter-spacing:.4px;
-  box-shadow:0 6px 20px rgba(255,59,48,.35);transition:.2s}
-.btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 26px rgba(255,59,48,.5)}
+  padding:6px 8px;background:var(--surface-2);border:1px solid var(--border);
+  border-radius:6px;font-size:12px;color:var(--text);transition:.2s;height:32px}
+#loginForm input:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(255,59,48,.15)}
+.remember{flex-direction:row!important;align-items:center;gap:5px;font-size:10px;color:var(--muted);margin-top:2px}
+.remember input{width:12px;height:12px;accent-color:var(--accent);margin:0}
+.btn-primary{margin-top:4px;padding:8px;border-radius:6px;background:var(--grad);
+  color:#fff;font-weight:700;font-size:11px;letter-spacing:.4px;
+  box-shadow:0 4px 12px rgba(255,59,48,.35);transition:.2s;height:32px}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(255,59,48,.5)}
 .btn-primary:active{transform:translateY(0)}
 .btn-primary:disabled{opacity:.6;cursor:wait}
-.login-msg{margin-top:14px;font-size:13px;text-align:center;color:#ff6b6b;min-height:18px}
+.login-msg{margin-top:4px;font-size:9px;text-align:center;color:#ff6b6b;min-height:12px;line-height:1.2}
 
 /* ====== TOPBAR ====== */
 .topbar{display:flex;align-items:center;gap:16px;padding:14px 22px;
@@ -225,7 +247,6 @@ button{cursor:pointer}
   .browse-body{position:relative}
 }
 
-
 /* ====== CANVAS EM PAISAGEM NO CELULAR ======
    Em navegador móvel, a página não pode mudar a orientação física do aparelho.
    Esta regra gira o canvas da aplicação quando o aparelho está em retrato,
@@ -266,14 +287,14 @@ button{cursor:pointer}
 
 <!-- ================= LOGIN ================= -->
 <section id="loginScreen" class="screen active">
-  <div class="login-card">
-    <div class="brand">
-      <div class="brand-logo">ITV</div>
-      <div>
-        <h1>ITVPlayer</h1>
-        <p>Streaming IPTV & P2P</p>
-      </div>
+  <div class="brand">
+    <div class="brand-logo">ITV</div>
+    <div>
+      <h1>ITVPlayer</h1>
+      <p>Streaming IPTV & P2P</p>
     </div>
+  </div>
+  <div class="login-card">
     <form id="loginForm" autocomplete="on">
       <label>
         <span>URL do Servidor</span>
